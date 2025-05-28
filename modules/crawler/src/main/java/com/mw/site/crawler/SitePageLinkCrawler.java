@@ -46,7 +46,7 @@ public class SitePageLinkCrawler {
 		if (_log.isInfoEnabled()) _log.info("activating");
 	}
 
-	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputBaseFolder) {
+	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputFolder) {
 		
 		long companyId = Long.valueOf(companyIdString);
 		long siteId = Long.valueOf(siteIdString);
@@ -62,7 +62,7 @@ public class SitePageLinkCrawler {
 		_log.info("EmailAddressEnc: " + emailAddressEnc);
 		_log.info("PasswordEnc: " + passwordEnc);
 		_log.info("CookieDomain: " + cookieDomain);
-		_log.info("Output Base Folder: " + outputBaseFolder);
+		_log.info("OutputFolder: " + outputFolder);
 		
 		Company company = companyLocalService.fetchCompany(companyId);
 		
@@ -108,8 +108,6 @@ public class SitePageLinkCrawler {
 			
 			pageTO.setName(layout.getName(user.getLocale()));
 			pageTO.setPrivatePage(layout.isPrivateLayout());
-			
-			log("Page Name: " + layout.getName(user.getLocale()));	
 
 			String[] responseArray = layoutCrawler.getLayoutContent(layout, user.getLocale());
 			
@@ -169,13 +167,13 @@ public class SitePageLinkCrawler {
 			return;
 		}
 		
-		File outputFolder = new File(outputBaseFolder);
-		if (!outputFolder.exists()) outputFolder.mkdirs();
+		File outputFolderFile = new File(outputFolder);
+		if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
 		
 		String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + System.currentTimeMillis() + ".txt";
 
 		try {
-			printWriter = new PrintWriter(outputFolder.getAbsolutePath() + "/" + fileName);
+			printWriter = new PrintWriter(outputFolderFile.getAbsolutePath() + "/" + fileName);
 			
 			long pageCount = 1;
 			
@@ -186,6 +184,7 @@ public class SitePageLinkCrawler {
 				printWriter.println("[" + pageCount + "] Private: " + pageTO.isPrivatePage());
 				if (validateLinksOnPagesBoolean) {
 					printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
+					printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
 					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
 				}
 				printWriter.println("**********************************************************************");
@@ -193,21 +192,26 @@ public class SitePageLinkCrawler {
 				
 				List<LinkTO> linkTOs = pageTO.getLinks();
 				
-				for (LinkTO linkTO: linkTOs) {
-					printWriter.println("Link Label: " + linkTO.getLabel());
-					printWriter.println("Link URL: " + linkTO.getHref());
-					if (validateLinksOnPagesBoolean) {
-						if (linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
-							printWriter.println("Link is valid.");
-						} else {
-							if (Validator.isNotNull(linkTO.getStatusMessage())) {
-								printWriter.println("Link not verified: " + linkTO.getStatusCode() + ", " + linkTO.getStatusMessage());
+				if (!linkTOs.isEmpty()) {
+					for (LinkTO linkTO: linkTOs) {
+						printWriter.println("Link Label: " + linkTO.getLabel());
+						printWriter.println("Link URL: " + linkTO.getHref());
+						if (validateLinksOnPagesBoolean) {
+							if (linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
+								printWriter.println("Link appears to be valid.");
 							} else {
-								printWriter.println("Link not verified: " + linkTO.getStatusCode());	
+								if (Validator.isNotNull(linkTO.getStatusMessage())) {
+									printWriter.println("Link not verified: " + linkTO.getStatusCode() + ", " + linkTO.getStatusMessage());
+								} else {
+									printWriter.println("Link not verified: " + linkTO.getStatusCode());	
+								}
 							}
 						}
-					}
-					printWriter.println("");					
+						printWriter.println("");					
+					}					
+				} else {
+					printWriter.println("No links found on the page.");
+					printWriter.println("");
 				}
 				
 				pageCount += 1;
@@ -220,7 +224,7 @@ public class SitePageLinkCrawler {
 			printWriter.close();
 		}			
 		
-		log("Done, Output written to: " + outputFolder.getAbsolutePath() + "/" + fileName);
+		log("Done, Output written to: " + outputFolderFile.getAbsolutePath() + "/" + fileName);
 	}
 	
 	private boolean includeLink(Element link) {
