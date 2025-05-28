@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.http.HttpStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -34,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
 
 @Component(
 		immediate = true,
-		property = {"osgi.command.function=crawlPrivatePages", "osgi.command.scope=sitePageLinkCrawler"},
+		property = {"osgi.command.function=crawlPages", "osgi.command.scope=sitePageLinkCrawler"},
 		service = SitePageLinkCrawler.class
 	)
 public class SitePageLinkCrawler {
@@ -45,14 +46,18 @@ public class SitePageLinkCrawler {
 		if (_log.isInfoEnabled()) _log.info("activating");
 	}
 
-	public void crawlPrivatePages(String companyIdString, String siteIdString, String layoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputBaseFolder) {
+	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputBaseFolder) {
 		
 		long companyId = Long.valueOf(companyIdString);
 		long siteId = Long.valueOf(siteIdString);
+		boolean validateLinksOnPagesBoolean = Boolean.valueOf(validateLinksOnPages);
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("SiteId: " + siteId);
-		_log.info("LayoutURLPrefix: " + layoutUrlPrefix);
+		_log.info("validateLinksOnPagesBoolean: " + validateLinksOnPagesBoolean);
+		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
+		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
+		_log.info("PrivateLayoutURLPrefix: " + privateLayoutUrlPrefix);
 		_log.info("EmailAddress: " + emailAddress);
 		_log.info("EmailAddressEnc: " + emailAddressEnc);
 		_log.info("PasswordEnc: " + passwordEnc);
@@ -83,11 +88,18 @@ public class SitePageLinkCrawler {
 			return;
 		}
 		
-		List<Layout> layouts = layoutLocalService.getLayouts(siteId, true); // Private pages only
+		List<Layout> publicLayouts = layoutLocalService.getLayouts(siteId, false);
+		List<Layout> privateLayouts = layoutLocalService.getLayouts(siteId, true);
 		
-		log("Private Page Count: " + layouts.size());
+		log("Public Page Count: " + publicLayouts.size());
+		log("Private Page Count: " + privateLayouts.size());
 		
-		PrivateLayoutCrawler layoutCrawler = new PrivateLayoutCrawler(layoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain);
+		List<Layout> layouts = new ArrayList<Layout>();
+		
+		layouts.addAll(publicLayouts);
+		layouts.addAll(privateLayouts);
+		
+		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain, user.getLocale());
 		
 		List<PageTO> pageTOs = new ArrayList<PageTO>();
 		
@@ -95,38 +107,56 @@ public class SitePageLinkCrawler {
 			PageTO pageTO = new PageTO();
 			
 			pageTO.setName(layout.getName(user.getLocale()));
+			pageTO.setPrivatePage(layout.isPrivateLayout());
 			
 			log("Page Name: " + layout.getName(user.getLocale()));	
-			
-			String[] responseArray = crawlPageContent(layout, layoutCrawler, user.getLocale());
+
+			String[] responseArray = layoutCrawler.getLayoutContent(layout, user.getLocale());
 			
 			if (Validator.isNotNull(responseArray) && Validator.isNotNull(responseArray[0]) && Validator.isNotNull(responseArray[1])) {
 				String pageURL = responseArray[0];
 				String pageHtml = responseArray[1];
-				
-				log("Page URL: " + pageURL);
-				
+							
 				pageTO.setUrl(pageURL);
 				
 				Document htmlDocument = Jsoup.parse(pageHtml.toString());
 
-				Element body = htmlDocument.selectFirst("section#content"); 
-				
+				Element body = htmlDocument.selectFirst("section#content");
+
 				List<Element> links = body.select("a").asList();
 				
 				List<LinkTO> linkTOs = new ArrayList<LinkTO>();
+				
+				long validLinkCount = 0;
+				long invalidLinkCount = 0;
 				
 				for (Element link: links) {
 					if (includeLink(link)) {
 						String href = link.attr("href");
 						String label = link.text();
+						String[] linkStatus = {"", ""};
 						
-						linkTOs.add(new LinkTO(href, label));				
+						if (validateLinksOnPagesBoolean) {
+							linkStatus = layoutCrawler.validateLink(href, relativeUrlPrefix, user.getLocale());
+							
+							if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
+								validLinkCount += 1;
+							} else {
+								invalidLinkCount += 1;
+							}							
+						}
+						
+						linkTOs.add(new LinkTO(href, label, linkStatus[0], linkStatus[1]));
 					}
 				}
 				
-				pageTO.setLinks(linkTOs);
+				if (validateLinksOnPagesBoolean) {
+					pageTO.setValidLinkCount(validLinkCount);
+					pageTO.setInvalidLinkCount(invalidLinkCount);	
+				}
 				
+				pageTO.setLinks(linkTOs);
+
 				pageTOs.add(pageTO);
 			}
 		}
@@ -134,7 +164,7 @@ public class SitePageLinkCrawler {
 		PrintWriter printWriter = null;
 		
 		if (pageTOs.isEmpty()) {
-			log("No Private Pages found...");	
+			log("No Pages found...");	
 			
 			return;
 		}
@@ -153,6 +183,11 @@ public class SitePageLinkCrawler {
 				printWriter.println("**********************************************************************");
 				printWriter.println("[" + pageCount + "] Page: " + pageTO.getName());
 				printWriter.println("[" + pageCount + "] URL: " + pageTO.getUrl());
+				printWriter.println("[" + pageCount + "] Private: " + pageTO.isPrivatePage());
+				if (validateLinksOnPagesBoolean) {
+					printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
+					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
+				}
 				printWriter.println("**********************************************************************");
 				printWriter.println("");
 				
@@ -161,6 +196,17 @@ public class SitePageLinkCrawler {
 				for (LinkTO linkTO: linkTOs) {
 					printWriter.println("Link Label: " + linkTO.getLabel());
 					printWriter.println("Link URL: " + linkTO.getHref());
+					if (validateLinksOnPagesBoolean) {
+						if (linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
+							printWriter.println("Link is valid.");
+						} else {
+							if (Validator.isNotNull(linkTO.getStatusMessage())) {
+								printWriter.println("Link not verified: " + linkTO.getStatusCode() + ", " + linkTO.getStatusMessage());
+							} else {
+								printWriter.println("Link not verified: " + linkTO.getStatusCode());	
+							}
+						}
+					}
 					printWriter.println("");					
 				}
 				
@@ -197,7 +243,7 @@ public class SitePageLinkCrawler {
 	}
 	
     private String[] crawlPageContent(
-            Layout layout, PrivateLayoutCrawler layoutCrawler, Locale locale) {
+            Layout layout, LayoutCrawler layoutCrawler, Locale locale) {
 
         return layoutCrawler.getLayoutContent(layout, locale);
     }

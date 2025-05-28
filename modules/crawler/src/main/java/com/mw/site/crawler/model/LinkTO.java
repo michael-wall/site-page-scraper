@@ -7,6 +7,8 @@ public class LinkTO implements Serializable{
 	
 	private String href;
 	private String label;
+	private String statusCode;
+	private String statusMessage;
 	
 	public String getHref() {
 		return href;
@@ -20,11 +22,23 @@ public class LinkTO implements Serializable{
 	public void setLabel(String label) {
 		this.label = label;
 	}
-	
-	public LinkTO(String href, String label) {
+	public String getStatusCode() {
+		return statusCode;
+	}
+	public void setStatusCode(String statusCode) {
+		this.statusCode = statusCode;
+	}
+	public String getStatusMessage() {
+		return statusMessage;
+	}
+	public void setStatusMessage(String statusMessage) {
+		this.statusMessage = statusMessage;
+	}
+	public LinkTO(String href, String label, String statusCode, String statusMessage) {
 		super();
 		this.href = href;
 		this.label = label;
+		this.statusCode = statusCode;
+		this.statusMessage = statusMessage;
 	}
-
 }

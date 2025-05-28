@@ -8,6 +8,9 @@ public class PageTO implements Serializable {
 	
 	private String name;
 	private String url;
+	private boolean privatePage = false;
+	private long validLinkCount = 0;
+	private long invalidLinkCount = 0;
 	
 	private List<LinkTO> links;
 
@@ -27,6 +30,30 @@ public class PageTO implements Serializable {
 		this.url = url;
 	}
 
+	public boolean isPrivatePage() {
+		return privatePage;
+	}
+
+	public void setPrivatePage(boolean privatePage) {
+		this.privatePage = privatePage;
+	}
+
+	public long getValidLinkCount() {
+		return validLinkCount;
+	}
+
+	public void setValidLinkCount(long validLinkCount) {
+		this.validLinkCount = validLinkCount;
+	}
+
+	public long getInvalidLinkCount() {
+		return invalidLinkCount;
+	}
+
+	public void setInvalidLinkCount(long invalidLinkCount) {
+		this.invalidLinkCount = invalidLinkCount;
+	}
+
 	public List<LinkTO> getLinks() {
 		return links;
 	}
@@ -37,12 +64,5 @@ public class PageTO implements Serializable {
 	
 	public PageTO() {
 		super();
-	}
-
-	public PageTO(String name, String url, List<LinkTO> links) {
-		super();
-		this.name = name;
-		this.url = url;
-		this.links = links;
 	}
 }

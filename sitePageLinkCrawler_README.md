@@ -1,25 +1,27 @@
 **Introduction**
 
-- This module can be used to export a list of Links on each Private Page within a specific Liferay Site. The output is written to a single .txt file.
-- The module exposes a custom Gogo shell command: sitePageLinkCrawler:crawlPrivatePages
+- This module can be used to export a list of Links on each Public and Private Page within a specific Liferay Site. The output is written to a single .txt file.
+- The module exposes a custom Gogo shell command: sitePageLinkCrawler:crawlPages
 
 **Usage**
 
 The syntax and arguments to call Gogo shell command are as follows:
 
 ```
-sitePageHTMLCrawler:crawlPrivatePages "[companyId]" "[siteId]" "[layoutUrlPrefix]" "[emailAddress]" "[emailAddressEnc]" "[passwordEnc]" "[cookieDomain]" "[outputBaseFolder]"
+sitePageHTMLCrawler:crawlPages "[companyId]" "[siteId]" "[validateLinksOnPages]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[emailAddress]" "[emailAddressEnc]" "[passwordEnc]" "[cookieDomain]" "[outputBaseFolder]"
 ```
 
 For example in Liferay PaaS:
 
 ```
-sitePageLinkCrawler:crawlPrivatePages "23990396268826" "32920" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwklmsitescraper-prd.lfr.cloud" "/mnt/persistent-storage/"
+sitePageLinkCrawler:crawlPages "23990396268826" "32920" "true" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwklmsitescraper-prd.lfr.cloud" "/mnt/persistent-storage/"
 ```
 
-Foir example in a local dev environment:
+For example in a local dev environment:
 
-sitePageLinkCrawler:crawlPrivatePages "20096" "49006" "http://localhost:8080/group/linktest" "test@liferay.com" "366b32764248576e783543736e55526e6e57707853773d3d" "3472704e536345712b73575a316c4a6c447a705365673d3d" "localhost" "C:/temp/crawler/"
+```
+sitePageLinkCrawler:crawlPages "20096" "49006" "true" "http://localhost:8080" "http://localhost:8080/web/linktest" "http://localhost:8080/group/linktest" "test@liferay.com" "366b32764248576e783543736e55526e6e57707853773d3d" "3472704e536345712b73575a316c4a6c447a705365673d3d" "localhost" "C:/temp/crawler/"
+```
 
 Note: 
 - All arguments are passed as String values with quotes and a space separator between arguments.
@@ -29,7 +31,10 @@ Arguments:
 
 - companyId: The companyId of the Virtual Instance that the Site resides in.
 - siteId: The siteId of the Site to be crawled.
-- layoutUrlPrefix: The base URL used when accessing the Site e.g. http://mw.com:8080/group/intranet
+- validateLinksOnPages: Whether to validate the links on the pages, boolean so "true" or "false". Enabling this will increase the runtime.
+- relativeUrlPrefix: The base URL used when validating relative URLs e.g. https://mw.com
+- publicLayoutUrlPrefix: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet
+- privateLayoutUrlPrefix: The base URL used when accessing the Private Pages of the Site e.g. https://mw.com/group/intranet
 - emailAddress: The email address of the user to log in as. See 'Crawler User Account' section.
 - emailAddressEnc: The encrypted email address of the user. See 'Crawler User Account' section.
 - passwordEnc: The encrypted password of the user. See 'Crawler User Account' section.
