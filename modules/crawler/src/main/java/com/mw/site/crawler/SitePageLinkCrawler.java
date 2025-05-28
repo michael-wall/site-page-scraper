@@ -159,8 +159,6 @@ public class SitePageLinkCrawler {
 			}
 		}
 		
-		PrintWriter printWriter = null;
-		
 		if (pageTOs.isEmpty()) {
 			log("No Pages found...");	
 			
@@ -172,6 +170,15 @@ public class SitePageLinkCrawler {
 		
 		String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + System.currentTimeMillis() + ".txt";
 
+		outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, outputFolderFile, fileName);
+		
+		log("Done, Output written to: " + outputFolderFile.getAbsolutePath() + "/" + fileName);
+	}
+
+	private void outputToTxtFile(boolean validateLinksOnPagesBoolean, List<PageTO> pageTOs, File outputFolderFile,
+			String fileName) {
+		PrintWriter printWriter = null;
+		
 		try {
 			printWriter = new PrintWriter(outputFolderFile.getAbsolutePath() + "/" + fileName);
 			
@@ -179,13 +186,16 @@ public class SitePageLinkCrawler {
 			
 			for (PageTO pageTO: pageTOs) {
 				printWriter.println("**********************************************************************");
-				printWriter.println("[" + pageCount + "] Page: " + pageTO.getName());
-				printWriter.println("[" + pageCount + "] URL: " + pageTO.getUrl());
-				printWriter.println("[" + pageCount + "] Private: " + pageTO.isPrivatePage());
-				if (validateLinksOnPagesBoolean) {
-					printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
-					printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
-					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
+				printWriter.println("[" + pageCount + "] Page Name: " + pageTO.getName());
+				printWriter.println("[" + pageCount + "] Page URL: " + pageTO.getUrl());
+				printWriter.println("[" + pageCount + "] Private Page: " + pageTO.isPrivatePage());
+				printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
+				
+				if (validateLinksOnPagesBoolean) {	
+					if (pageTO.getLinks().size() > 0) {
+						printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
+						printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());						
+					}
 				}
 				printWriter.println("**********************************************************************");
 				printWriter.println("");
@@ -222,9 +232,7 @@ public class SitePageLinkCrawler {
 			if (printWriter != null) printWriter.close();
 			
 			printWriter.close();
-		}			
-		
-		log("Done, Output written to: " + outputFolderFile.getAbsolutePath() + "/" + fileName);
+		}
 	}
 	
 	private boolean includeLink(Element link) {

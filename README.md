@@ -75,6 +75,9 @@ lcp files download --prefix /siteExport_1726490121400/ --dest c:/temp
 
 **Notes**
 
+- This is a ‘proof of concept’ that is being provided ‘as is’ without any support coverage or warranty.
+- This should be tested in a non-production environment with ‘production like’ data - i.e. volume and data types.
+- The output logic can be refactored to output in spreadsheet format if required by replacing the outputToTxtFile method e.g. using https://poi.apache.org/ - HSSF for .xls and XSSF for .xlsx.
 - The module has been tested in a local environment with JDK 11, Liferay DXP 7.4 U92 and OpenID SSO enabled.
 - The module has been tested with Public and Private Pages of Type Content Page.
 - The Language of the User is used when retreiving the Pages.
