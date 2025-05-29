@@ -99,6 +99,10 @@ public class SitePageLinkCrawler {
 		layouts.addAll(publicLayouts);
 		layouts.addAll(privateLayouts);
 		
+		boolean hasLayouts = false;
+		
+		if (!layouts.isEmpty()) hasLayouts = true;
+		
 		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain, user.getLocale());
 		
 		List<PageTO> pageTOs = new ArrayList<PageTO>();
@@ -119,7 +123,7 @@ public class SitePageLinkCrawler {
 				
 				Document htmlDocument = Jsoup.parse(pageHtml.toString());
 
-				Element body = htmlDocument.selectFirst("section#content");
+				Element body = htmlDocument.selectFirst("section#content"); // Ensure this is valid if using a custom theme
 
 				List<Element> links = body.select("a").asList();
 				
@@ -160,7 +164,11 @@ public class SitePageLinkCrawler {
 		}
 		
 		if (pageTOs.isEmpty()) {
-			log("No Pages found...");	
+			if (hasLayouts) {
+				log("No Pages crawled - check the logs for errors...");		
+			} else {
+				log("No Pages found.");	
+			}
 			
 			return;
 		}
@@ -168,7 +176,7 @@ public class SitePageLinkCrawler {
 		File outputFolderFile = new File(outputFolder);
 		if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
 		
-		String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + System.currentTimeMillis() + ".txt";
+		String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + user.getLocale().toString() + "_" + System.currentTimeMillis() + ".txt";
 
 		outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, outputFolderFile, fileName);
 		

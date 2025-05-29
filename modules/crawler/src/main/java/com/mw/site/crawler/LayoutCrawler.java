@@ -102,11 +102,11 @@ public class LayoutCrawler {
             
             HttpResponse httpResponse = _httpClient.execute(httpGet, httpClientContext);
 
-            List<Cookie> cookies = httpClientContext.getCookieStore().getCookies();
+            //List<Cookie> cookies = httpClientContext.getCookieStore().getCookies();
             
-//            for (Cookie cookie: cookies) {
-//            	_log.info(cookie.getDomain() + ", " + cookie.getName() + ", value: " + cookie.getValue());
-//            }
+            //for (Cookie cookie: cookies) {
+            //	_log.info(cookie.getDomain() + ", " + cookie.getName() + ", value: " + cookie.getValue());
+        	//}
             
             StatusLine statusLine = httpResponse.getStatusLine();
             
@@ -122,9 +122,7 @@ public class LayoutCrawler {
             if (entity != null) EntityUtils.consume(entity);
         }
         catch (Exception exception) {
-            if (_log.isWarnEnabled()) {
-                _log.warn("Unable to crawl layout content for layout: " + layoutFullURL, exception);
-            }
+        	 _log.info("Unable to crawl layout: " + layoutFullURL + ", Exception:" +  exception.getMessage());
         }
 
         return null;
