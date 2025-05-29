@@ -2,7 +2,7 @@
 
 - This module can be used to export a list of Links on each Public and Private Page within a specific Liferay Site.
 - Optionally the Links can be checked to ensure that they are valid.
-- The output is written to a single .txt file.
+- The output is written to a single .txt file for example sitePageLinks_LinkTest_en_US_1748505842146.txt
 - The module exposes a single custom Gogo shell command: sitePageLinkCrawler:crawlPages
 
 **Usage**
@@ -70,7 +70,7 @@ In addition:
 - Ensure the latest version of the LCP CLI tool is being used.
 - Download the crawler output with the following command:
 ```
-lcp files download --prefix /siteExport_1726490121400/ --dest c:/temp
+lcp files download --prefix /siteExport/ --dest c:/temp
 ```
 
 **Notes**
