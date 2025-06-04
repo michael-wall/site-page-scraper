@@ -16,7 +16,7 @@ sitePageHTMLCrawler:crawlPages "[companyId]" "[siteId]" "[validateLinksOnPages]"
 For example in Liferay PaaS (with HTTPS):
 
 ```
-sitePageLinkCrawler:crawlPages "23990396268826" "32920" "true" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwklmsitescraper-prd.lfr.cloud" "/mnt/persistent-storage/"
+sitePageLinkCrawler:crawlPages "23990396268826" "32920" "true" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwklmsitescraper-prd.lfr.cloud" "/mnt/persistent-storage/"
 ```
 
 For example in a local dev environment (with HTTP):
