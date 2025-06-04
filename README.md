@@ -63,6 +63,44 @@ In addition:
 - A timestamp is included to avoid overewriting an existing file for the same Site.
 - On Liferay PaaS the output is written to the Liferay service and are accessible with the Liferay service shell. Depending on the outputBaseFolder the folder may not be persistent. /mnt/persistent-storage/ is persistent.
 
+**Sample Output**
+
+```
+**********************************************************************
+[1] Page Name: Public Test 1
+[1] Page URL: http://localhost:8080/web/linktest/public-test-1
+[1] Private Page: false
+[1] Page Link Count: 4
+[1] Valid Link Count: 3
+[1] Invalid Link Count: 1
+**********************************************************************
+
+Link Label: Test 1
+Link URL: http://localhost:8080/group/linktest/test-3
+Link appears to be valid.
+
+Link Label: Test 3
+Link URL: /group/linktest/test-3
+Link appears to be valid.
+
+Link Label: Energy and Utilities
+Link URL: https://www.liferay.com/industries/energy-and-utilities
+Link appears to be valid.
+
+Link Label: Test 4 (Missing)
+Link URL: http://localhost:8080/group/linktest/test-4
+Link not verified: 404
+
+**********************************************************************
+[2] Page Name: Public Test 2
+[2] Page URL: http://localhost:8080/web/linktest/public-test-2
+[2] Private Page: false
+[2] Page Link Count: 0
+**********************************************************************
+
+No links found on the page.
+```
+
 **Downloading Output in Liferay PaaS**
 
 - If /mnt/persistent-storage/ was used as the outputBaseFolder then the folder and contents can be downloaded with the LCP CLI tool.
