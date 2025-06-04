@@ -19,7 +19,7 @@ For example in Liferay PaaS (with HTTPS):
 sitePageLinkCrawler:crawlPages "23990396268826" "32920" "true" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwklmsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwklmsitescraper-prd.lfr.cloud" "/mnt/persistent-storage/"
 ```
 
-For example in a local dev environment (wityh HTTP):
+For example in a local dev environment (with HTTP):
 
 ```
 sitePageLinkCrawler:crawlPages "20096" "49006" "true" "http://localhost:8080" "http://localhost:8080/web/linktest" "http://localhost:8080/group/linktest" "test@liferay.com" "366b32764248576e783543736e55526e6e57707853773d3d" "3472704e536345712b73575a316c4a6c447a705365673d3d" "localhost" "C:/temp/crawler/"
@@ -75,8 +75,8 @@ lcp files download --prefix /siteExport/ --dest c:/temp
 
 **Notes**
 
-- This is a ‘proof of concept’ that is being provided ‘as is’ without any support coverage or warranty.
-- This should be tested in a non-production environment with ‘production like’ data - i.e. volume and data types.
+- This is a â€˜proof of conceptâ€™ that is being provided â€˜as isâ€™ without any support coverage or warranty.
+- This should be tested in a non-production environment with â€˜production likeâ€™ data - i.e. volume and data types.
 - The output logic can be refactored to output in spreadsheet format if required by replacing the outputToTxtFile method e.g. using https://poi.apache.org/ - HSSF for .xls and XSSF for .xlsx.
 - The module has been tested in a local environment with JDK 11, Liferay DXP 7.4 U92 and OpenID SSO enabled.
 - The module has been tested with Public and Private Pages of Type Content Page.
