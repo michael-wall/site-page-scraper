@@ -262,12 +262,6 @@ public class SitePageLinkCrawler {
 		System.out.println(output);		
 	}
 	
-    private String[] crawlPageContent(
-            Layout layout, LayoutCrawler layoutCrawler, Locale locale) {
-
-        return layoutCrawler.getLayoutContent(layout, locale);
-    }
-	
 	@Reference
 	private LayoutLocalService layoutLocalService;
 	
