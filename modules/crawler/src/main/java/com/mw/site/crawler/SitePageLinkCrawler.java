@@ -105,84 +105,87 @@ public class SitePageLinkCrawler {
 		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain, user.getLocale());
 		
 		List<PageTO> pageTOs = new ArrayList<PageTO>();
-		
-		for (Layout layout: layouts) {
-			if (!isCrawlableLayout(layout)) continue; // Skip if not a content page or widget page...
-			
-			PageTO pageTO = new PageTO();
-			
-			pageTO.setName(layout.getName(user.getLocale()));
-			pageTO.setPrivatePage(layout.isPrivateLayout());
-			
-			List<Element> webContentArticles = new ArrayList<Element>();
-			List<Element> links = new ArrayList<Element>();
-
-			String[] responseArray = layoutCrawler.getLayoutContent(layout, user.getLocale());
-			
-			if (Validator.isNotNull(responseArray) && Validator.isNotNull(responseArray[0]) && Validator.isNotNull(responseArray[1])) {
-				String pageURL = responseArray[0];
-				String pageHtml = responseArray[1];
-							
-				pageTO.setUrl(pageURL);
+		if (layoutCrawler != null) {
+			for (Layout layout: layouts) {
+				if (!isCrawlableLayout(layout)) continue; // Skip if not a content page or widget page...
 				
-				Document htmlDocument = Jsoup.parse(pageHtml.toString());
-
-				// <section id="content"> or similar...
-				Element body = htmlDocument.selectFirst("section#content"); // Ensure this is valid if using a custom theme
-
-				if (Validator.isNull(body)) {
-					_log.info(pageTO.getName() + ": element body is null.");
-				} else {
-					// <div class="journal-content-article " .....
-					webContentArticles = body.select("div.journal-content-article").asList();
-				}
+				PageTO pageTO = new PageTO();
 				
-				// Get all links inside the WCM Articles
-				for (Element webContentArticle: webContentArticles) {
-					links.addAll(webContentArticle.select("a").asList());
-				}
+				pageTO.setName(layout.getName(user.getLocale()));
+				pageTO.setPrivatePage(layout.isPrivateLayout());
 				
-				List<LinkTO> linkTOs = new ArrayList<LinkTO>();
+				List<Element> webContentArticles = new ArrayList<Element>();
+				List<Element> links = new ArrayList<Element>();
+	
+				String[] responseArray = layoutCrawler.getLayoutContent(layout, user.getLocale());
 				
-				long validLinkCount = 0;
-				long invalidLinkCount = 0;
-				
-				for (Element link: links) {
-					if (includeLink(link)) {
-						String href = link.attr("href");
-						String label = link.text();
-						String[] linkStatus = {"", ""};
-						
-						if (validateLinksOnPagesBoolean) {
-							linkStatus = layoutCrawler.validateLink(href, relativeUrlPrefix, user.getLocale());
-							
-							if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
-								validLinkCount += 1;
-							} else {
-								invalidLinkCount += 1;
-							}							
-						}
-						
-						linkTOs.add(new LinkTO(href, label, linkStatus[0], linkStatus[1]));
+				if (Validator.isNotNull(responseArray) && Validator.isNotNull(responseArray[0]) && Validator.isNotNull(responseArray[1])) {
+					String pageURL = responseArray[0];
+					String pageHtml = responseArray[1];
+								
+					pageTO.setUrl(pageURL);
+					
+					Document htmlDocument = Jsoup.parse(pageHtml.toString());
+	
+					// <section id="content"> or similar...
+					Element body = htmlDocument.selectFirst("section#content"); // Ensure this is valid if using a custom theme
+	
+					if (Validator.isNull(body)) {
+						_log.info(pageTO.getName() + ": element body is null.");
+					} else {
+						// <div class="journal-content-article " .....
+						webContentArticles = body.select("div.journal-content-article").asList();
 					}
+					
+					// Get all links inside the WCM Articles
+					for (Element webContentArticle: webContentArticles) {
+						links.addAll(webContentArticle.select("a").asList());
+					}
+					
+					List<LinkTO> linkTOs = new ArrayList<LinkTO>();
+					
+					long validLinkCount = 0;
+					long invalidLinkCount = 0;
+					
+					if (!links.isEmpty()) {
+						for (Element link: links) {
+							if (includeLink(link)) {
+								String href = link.attr("href");
+								String label = link.text();
+								String[] linkStatus = {"", ""};
+								
+								if (validateLinksOnPagesBoolean) {
+									linkStatus = layoutCrawler.validateLink(href, relativeUrlPrefix, user.getLocale());
+									
+									if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
+										validLinkCount += 1;
+									} else {
+										invalidLinkCount += 1;
+									}							
+								}
+								
+								linkTOs.add(new LinkTO(href, label, linkStatus[0], linkStatus[1]));
+							}
+						}					
+					}
+					
+					if (validateLinksOnPagesBoolean) {
+						pageTO.setValidLinkCount(validLinkCount);
+						pageTO.setInvalidLinkCount(invalidLinkCount);	
+					}
+					
+					pageTO.setLinks(linkTOs);
+	
+					pageTOs.add(pageTO);
 				}
-				
-				if (validateLinksOnPagesBoolean) {
-					pageTO.setValidLinkCount(validLinkCount);
-					pageTO.setInvalidLinkCount(invalidLinkCount);	
-				}
-				
-				pageTO.setLinks(linkTOs);
-
-				pageTOs.add(pageTO);
 			}
 		}
 		
 		if (pageTOs.isEmpty()) {
 			if (hasLayouts) {
-				log("No Pages crawled - check the logs for errors...");		
+				log("No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.");		
 			} else {
-				log("No Pages found.");	
+				log("No Pages found. Ensure that the Crawler settings were correct.");	
 			}
 			
 			return;

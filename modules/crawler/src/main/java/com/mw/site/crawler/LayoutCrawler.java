@@ -43,6 +43,7 @@ public class LayoutCrawler {
     
     public String[] validateLink(String url, String relativeUrlPrefix, Locale locale) {	
     	String[] responseStringArray = {"", ""};
+    	HttpEntity entity = null;
     	
         try {
             int connectTimeout = 10000; // 10 seconds
@@ -68,8 +69,7 @@ public class LayoutCrawler {
 
             StatusLine statusLine = httpResponse.getStatusLine();
             
-            HttpEntity entity = httpResponse.getEntity();
-            if (entity != null) EntityUtils.consume(entity);
+            entity = httpResponse.getEntity();
                        
             responseStringArray[0] = "" + statusLine.getStatusCode();
             responseStringArray[1] = "" + statusLine.getReasonPhrase();
@@ -80,6 +80,10 @@ public class LayoutCrawler {
         	
         	responseStringArray[0] = "-1";
         	responseStringArray[1] = exception.getMessage();
+        } finally {
+        	try {
+        		if (entity != null) EntityUtils.consume(entity);
+        	} catch (Exception e) {}
         }
         
         return responseStringArray;
@@ -88,6 +92,7 @@ public class LayoutCrawler {
     public String[] getLayoutContent(Layout layout, Locale locale) {
     	String[] responseStringArray = {"", ""};
     	String layoutFullURL = "";
+    	HttpEntity entity = null;
 
         try {
             if (layout.isPrivateLayout()) {
@@ -108,19 +113,21 @@ public class LayoutCrawler {
             
             StatusLine statusLine = httpResponse.getStatusLine();
             
-            HttpEntity entity = httpResponse.getEntity();
+            entity = httpResponse.getEntity();
 
             if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
             	responseStringArray[0] = layoutFullURL;
             	responseStringArray[1] = EntityUtils.toString(entity);
             	
                 return responseStringArray;
-            }
-           
-            if (entity != null) EntityUtils.consume(entity);
+            } 
         }
         catch (Exception exception) {
         	 _log.info("Unable to crawl layout: " + layoutFullURL + ", Exception:" +  exception.getMessage());
+        } finally {
+        	try {
+        		if (entity != null) EntityUtils.consume(entity);
+        	} catch (Exception e) {}
         }
 
         return null;
