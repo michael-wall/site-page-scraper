@@ -3,11 +3,15 @@ package com.mw.site.crawler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.LocaleUtil;
 
 import java.net.URI;
 import java.util.Locale;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -24,6 +28,18 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
 public class LayoutCrawler {
+	
+    public LayoutCrawler(String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user) {
+
+        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+
+        _httpClient = httpClientBuilder.setUserAgent(_USER_AGENT).build();
+        
+        _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
+        _privateLayoutUrlPrefix = privateLayoutUrlPrefix;
+        
+        httpClientContext = _getHttpClientContext(httpRequest, cookieDomain, user.getLocale());    
+    }	
 
     public LayoutCrawler(String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
 
@@ -64,7 +80,7 @@ public class LayoutCrawler {
             
             HttpGet httpGet = new HttpGet(url);
             httpGet.setConfig(config);
-
+            
             HttpResponse httpResponse = _httpClient.execute(httpGet, httpClientContext);
 
             StatusLine statusLine = httpResponse.getStatusLine();
@@ -161,6 +177,31 @@ public class LayoutCrawler {
 
         return httpClientContext;
     }
+    
+    private HttpClientContext _getHttpClientContext(HttpServletRequest httpRequest, String cookieDomain, Locale locale) {
+
+        if (_httpClientContext != null) {
+            return _httpClientContext;
+        }
+
+        CookieStore cookieStore = new BasicCookieStore();
+        
+        Cookie[] cookies = httpRequest.getCookies();
+        if (cookies != null) {
+            for (Cookie servletCookie : cookies) {
+                BasicClientCookie clientCookie = new BasicClientCookie(servletCookie.getName(), servletCookie.getValue());
+                clientCookie.setDomain(cookieDomain);
+                clientCookie.setPath(servletCookie.getPath() != null ? servletCookie.getPath() : "/");
+                cookieStore.addCookie(clientCookie);
+            }
+        }
+
+        HttpClientContext httpClientContext = new HttpClientContext();
+
+        httpClientContext.setCookieStore(cookieStore);
+
+        return httpClientContext;
+    }    
 
     private BasicClientCookie _createClientCookie(
             String cookieName, String cookieValue, String domain) {

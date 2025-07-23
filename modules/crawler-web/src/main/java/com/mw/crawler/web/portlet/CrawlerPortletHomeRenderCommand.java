@@ -1,0 +1,50 @@
+package com.mw.crawler.web.portlet;
+
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.mw.crawler.web.constants.CrawlerPortletKeys;
+
+import java.util.Map;
+
+import javax.portlet.PortletException;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
+
+/**
+ * @author Michael Wall
+ */
+@Component(
+	immediate = true, 
+	property = {
+		"javax.portlet.name=" + CrawlerPortletKeys.CRAWLER_PORTLET,
+		"mvc.command.name=/home"
+	},
+	service = MVCRenderCommand.class
+)
+public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
+	
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		if (_log.isInfoEnabled()) _log.info("activating");
+	}	
+	
+	@Override
+	public String render(RenderRequest renderRequest, RenderResponse renderResponse) throws PortletException {
+		_log.info("render");
+		
+		boolean pageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "pageCrawlerTriggered", false);
+		
+		renderRequest.setAttribute("pageCrawlerTriggered", pageCrawlerTriggered);
+		
+		return "/crawler.jsp";
+	}
+	
+ 	private static final Log _log = LogFactoryUtil.getLog(CrawlerPortletHomeRenderCommand.class);	
+}

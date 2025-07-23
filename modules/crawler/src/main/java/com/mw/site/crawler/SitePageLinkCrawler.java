@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.http.HttpStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -43,6 +45,23 @@ public class SitePageLinkCrawler {
 	@Modified
 	protected void activate(Map<String, Object> properties) {
 		if (_log.isInfoEnabled()) _log.info("activating");
+	}
+	
+	public void crawlPage(HttpServletRequest httpRequest, long companyId, Group group, boolean validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, User user, String cookieDomain, String outputFolder) {
+		
+		_log.info("CompanyId: " + companyId);
+		_log.info("GroupId: " + group.getGroupId());
+		_log.info("validateLinksOnPages: " + validateLinksOnPages);
+		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
+		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
+		_log.info("PrivateLayoutURLPrefix: " + privateLayoutUrlPrefix);
+		_log.info("EmailAddress: " + user.getEmailAddress());
+		_log.info("CookieDomain: " + cookieDomain);
+		_log.info("OutputFolder: " + outputFolder);		
+		
+		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user);
+		
+		crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPages, user, group, layoutCrawler);
 	}
 
 	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputFolder) {
@@ -87,8 +106,15 @@ public class SitePageLinkCrawler {
 			return;
 		}
 		
-		List<Layout> publicLayouts = layoutLocalService.getLayouts(siteId, false);
-		List<Layout> privateLayouts = layoutLocalService.getLayouts(siteId, true);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain, user.getLocale());
+		
+		crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPagesBoolean, user, group, layoutCrawler);
+	}
+
+	private void crawlPages(String relativeUrlPrefix, String outputFolder,
+			boolean validateLinksOnPagesBoolean, User user, Group group, LayoutCrawler layoutCrawler) {
+		List<Layout> publicLayouts = layoutLocalService.getLayouts(group.getGroupId(), false);
+		List<Layout> privateLayouts = layoutLocalService.getLayouts(group.getGroupId(), true);
 		
 		log("Public Page Count: " + publicLayouts.size());
 		log("Private Page Count: " + privateLayouts.size());
@@ -101,9 +127,7 @@ public class SitePageLinkCrawler {
 		boolean hasLayouts = false;
 		
 		if (!layouts.isEmpty()) hasLayouts = true;
-		
-		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain, user.getLocale());
-		
+				
 		List<PageTO> pageTOs = new ArrayList<PageTO>();
 		if (layoutCrawler != null) {
 			for (Layout layout: layouts) {
@@ -203,6 +227,8 @@ public class SitePageLinkCrawler {
 
 	private boolean isCrawlableLayout(Layout layout) {
 		if (Validator.isNull(layout)) return false;
+		
+		if (layout.getFriendlyURL().equalsIgnoreCase("/crawler")) return false;
 		
 		if (Validator.isNull(layout.getType())) return false;
 		
