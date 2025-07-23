@@ -188,7 +188,11 @@ public class LayoutCrawler {
         
         Cookie[] cookies = httpRequest.getCookies();
         if (cookies != null) {
+        	_log.info("Cookies count: " + cookies.length);
+        	
             for (Cookie servletCookie : cookies) {
+            	//_log.info(servletCookie.getName() + ": " + servletCookie.getValue());
+            	
                 BasicClientCookie clientCookie = new BasicClientCookie(servletCookie.getName(), servletCookie.getValue());
                 clientCookie.setDomain(cookieDomain);
                 clientCookie.setPath(servletCookie.getPath() != null ? servletCookie.getPath() : "/");

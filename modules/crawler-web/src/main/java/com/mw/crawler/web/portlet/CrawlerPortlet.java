@@ -24,7 +24,7 @@ import org.osgi.service.component.annotations.Modified;
 @Component(
 	immediate = true,
 	property = {
-		"com.liferay.portlet.display-category=category.mw",
+		"com.liferay.portlet.display-category=category.tools",
 		"com.liferay.portlet.instanceable=false",
 		"javax.portlet.init-param.template-path=/",
 		"javax.portlet.init-param.view-template=/crawler.jsp",
@@ -40,16 +40,18 @@ public class CrawlerPortlet extends MVCPortlet {
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
-		if (_log.isInfoEnabled()) _log.info("activating");
+		if (_log.isInfoEnabled()) _log.info("Activating...");
 	}	
 	
 	@Override
 	public void doView(RenderRequest renderRequest, RenderResponse renderResponse)
 			throws IOException, PortletException {
 
-		boolean pageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "pageCrawlerTriggered", false);
+		boolean sitePageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerTriggered", false);
+		String sitePageCrawlerStartTime = ParamUtil.getString(renderRequest, "sitePageCrawlerStartTime", null);
 		
-		renderRequest.setAttribute("pageCrawlerTriggered", pageCrawlerTriggered);
+		renderRequest.setAttribute("sitePageCrawlerTriggered", sitePageCrawlerTriggered);
+		renderRequest.setAttribute("sitePageCrawlerStartTime", sitePageCrawlerStartTime);
 
 		super.doView(renderRequest, renderResponse);
 		

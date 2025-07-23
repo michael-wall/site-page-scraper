@@ -32,16 +32,18 @@ public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
-		if (_log.isInfoEnabled()) _log.info("activating");
+		if (_log.isInfoEnabled()) _log.info("Activating...");
 	}	
 	
 	@Override
 	public String render(RenderRequest renderRequest, RenderResponse renderResponse) throws PortletException {
 		_log.info("render");
 		
-		boolean pageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "pageCrawlerTriggered", false);
+		boolean sitePageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerTriggered", false);
+		String sitePageCrawlerStartTime = ParamUtil.getString(renderRequest, "sitePageCrawlerStartTime", null);
 		
-		renderRequest.setAttribute("pageCrawlerTriggered", pageCrawlerTriggered);
+		renderRequest.setAttribute("sitePageCrawlerTriggered", sitePageCrawlerTriggered);
+		renderRequest.setAttribute("sitePageCrawlerStartTime", sitePageCrawlerStartTime);
 		
 		return "/crawler.jsp";
 	}

@@ -1,5 +1,6 @@
 package com.mw.crawler.web.portlet;
 
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -9,10 +10,16 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.mw.crawler.web.constants.CrawlerPortletKeys;
+import com.mw.site.crawler.LayoutCrawler;
 import com.mw.site.crawler.SitePageLinkCrawler;
+import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -34,15 +41,22 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"javax.portlet.name=" + CrawlerPortletKeys.CRAWLER_PORTLET,
 		"mvc.command.name=/crawlPages" },
+	configurationPid = SitePageCrawlerConfiguration.PID,
 	service = MVCActionCommand.class
 )
 public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	
 	@Activate
 	@Modified
-	protected void activate(Map<String, Object> properties) {
-		if (_log.isInfoEnabled()) _log.info("activating");
-	}	
+    protected void activate(Map<String, Object> properties) throws Exception {		
+		if (_log.isInfoEnabled()) _log.info("Activating...");		
+		
+		_sitePageCrawlerConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerConfiguration.class, properties);
+		
+		_log.info("outputFolder: " + _sitePageCrawlerConfiguration.outputFolder());
+		
+		_log.info("validateLinksOnPages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());
+	}		
 	
 	@Override
 	protected void doProcessAction(ActionRequest actionRequest, ActionResponse actionResponse) throws Exception {
@@ -55,7 +69,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		
 		long companyId = themeDisplay.getCompanyId();
 		long siteId = themeDisplay.getSiteGroupId();
-		boolean validateLinksOnPages = true;
+		boolean validateLinksOnPages = _sitePageCrawlerConfiguration.validateLinksOnPages();
 
 		String relativeUrlPrefix = getRelativeUrlPrefix(themeDisplay);
 		
@@ -70,7 +84,9 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		String privateLayoutUrlPrefix = relativeUrlPrefix + privatePrefix + siteFriendlyUrl;
 		
 		String cookieDomain = themeDisplay.getServerName();
-		String outputFolder = "C:/temp/crawler/";
+		String outputFolder = _sitePageCrawlerConfiguration.outputFolder();
+		
+		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, themeDisplay.getUser());
 		
 		// Asynchronous...
 		TransactionCommitCallbackUtil.registerCallback(new Callable<Void>() {
@@ -78,9 +94,16 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		    public Void call() throws Exception {
 		        // Use ExecutorService instead of raw threads
 		        Executors.newSingleThreadExecutor().submit(() -> {
-		            _log.info("Background Crawler started ...");
 		            try {
-		            	sitePageLinkCrawler.crawlPage(httpRequest, companyId, group, validateLinksOnPages, relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, themeDisplay.getUser(), cookieDomain, outputFolder);
+		            	_log.info("Background Crawler Started ...");
+		            	
+		            	String response = sitePageLinkCrawler.crawlPage(companyId, group, validateLinksOnPages, relativeUrlPrefix, themeDisplay.getUser(), outputFolder, layoutCrawler);
+		            	
+		            	if (Validator.isNotNull(response)) {
+		            		_log.info("Output written to: " + response);
+		            		
+		            		// TODO Do something here... for example send an email with the file attached...
+		            	}
 		            	
 		                _log.info("Background Crawler Completed ...");
 		            } catch (Exception e) {
@@ -92,7 +115,12 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		    }
 		});
 		
-		actionResponse.setRenderParameter("pageCrawlerTriggered", "true");
+		ZonedDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        String startTimeString = nowUtc.format(formatter) + " UTC";
+		
+		actionResponse.setRenderParameter("sitePageCrawlerTriggered", "true");
+		actionResponse.setRenderParameter("sitePageCrawlerStartTime", startTimeString);
 		actionResponse.setRenderParameter("mvcRenderCommandName", "/home");
 		
 		return;
@@ -115,6 +143,8 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	
 	@Reference(unbind = "-")
 	private GroupLocalService groupLocalService;
+	
+	private volatile SitePageCrawlerConfiguration _sitePageCrawlerConfiguration;	
 	
  	private static final Log _log = LogFactoryUtil.getLog(CrawlerPortletActionCommand.class);	
 }

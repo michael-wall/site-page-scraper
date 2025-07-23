@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.http.HttpStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -44,24 +42,18 @@ public class SitePageLinkCrawler {
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
-		if (_log.isInfoEnabled()) _log.info("activating");
+		if (_log.isInfoEnabled()) _log.info("Activating...");
 	}
 	
-	public void crawlPage(HttpServletRequest httpRequest, long companyId, Group group, boolean validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, User user, String cookieDomain, String outputFolder) {
+	public String crawlPage(long companyId, Group group, boolean validateLinksOnPages, String relativeUrlPrefix, User user, String outputFolder, LayoutCrawler layoutCrawler) {
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("GroupId: " + group.getGroupId());
 		_log.info("validateLinksOnPages: " + validateLinksOnPages);
 		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
-		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
-		_log.info("PrivateLayoutURLPrefix: " + privateLayoutUrlPrefix);
-		_log.info("EmailAddress: " + user.getEmailAddress());
-		_log.info("CookieDomain: " + cookieDomain);
 		_log.info("OutputFolder: " + outputFolder);		
 		
-		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user);
-		
-		crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPages, user, group, layoutCrawler);
+		return crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPages, user, group, layoutCrawler, true);
 	}
 
 	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputFolder) {
@@ -85,7 +77,7 @@ public class SitePageLinkCrawler {
 		Company company = companyLocalService.fetchCompany(companyId);
 		
 		if (company == null) {
-			log("Company not found for companyId: " + companyId);
+			log("Company not found for companyId: " + companyId, false);
 			
 			return;
 		}
@@ -93,7 +85,7 @@ public class SitePageLinkCrawler {
 		User user = userLocalService.fetchUserByEmailAddress(companyId, emailAddress);
 		
 		if (user == null) {
-			log("User not found for emailAddress: " + emailAddress);
+			log("User not found for emailAddress: " + emailAddress, false);
 			
 			return;
 		}
@@ -101,23 +93,23 @@ public class SitePageLinkCrawler {
 		Group group = groupLocalService.fetchGroup(siteId);
 		
 		if (group == null || !group.isSite()) {
-			log("Site not found for siteId: " + siteId);
+			log("Site not found for siteId: " + siteId, false);
 			
 			return;
 		}
 		
 		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain, user.getLocale());
 		
-		crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPagesBoolean, user, group, layoutCrawler);
+		crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPagesBoolean, user, group, layoutCrawler, false);
 	}
 
-	private void crawlPages(String relativeUrlPrefix, String outputFolder,
-			boolean validateLinksOnPagesBoolean, User user, Group group, LayoutCrawler layoutCrawler) {
+	private String crawlPages(String relativeUrlPrefix, String outputFolder,
+			boolean validateLinksOnPagesBoolean, User user, Group group, LayoutCrawler layoutCrawler, boolean asynchronous) {
 		List<Layout> publicLayouts = layoutLocalService.getLayouts(group.getGroupId(), false);
 		List<Layout> privateLayouts = layoutLocalService.getLayouts(group.getGroupId(), true);
 		
-		log("Public Page Count: " + publicLayouts.size());
-		log("Private Page Count: " + privateLayouts.size());
+		log("Public Page Count: " + publicLayouts.size(), asynchronous);
+		log("Private Page Count: " + privateLayouts.size(), asynchronous);
 		
 		List<Layout> layouts = new ArrayList<Layout>();
 		
@@ -207,12 +199,12 @@ public class SitePageLinkCrawler {
 		
 		if (pageTOs.isEmpty()) {
 			if (hasLayouts) {
-				log("No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.");		
+				log("No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.", asynchronous);		
 			} else {
-				log("No Pages found. Ensure that the Crawler settings were correct.");	
+				log("No Pages found. Ensure that the Crawler settings were correct.", asynchronous);	
 			}
 			
-			return;
+			return null;
 		}
 		
 		File outputFolderFile = new File(outputFolder);
@@ -222,7 +214,9 @@ public class SitePageLinkCrawler {
 
 		outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, outputFolderFile, fileName);
 		
-		log("Done, Output written to: " + outputFolderFile.getAbsolutePath() + "/" + fileName);
+		log("Done, Output written to: " + outputFolderFile.getAbsolutePath() + "/" + fileName, asynchronous);
+		
+		return outputFolderFile.getAbsolutePath() + "/" + fileName;
 	}
 
 	private boolean isCrawlableLayout(Layout layout) {
@@ -317,9 +311,12 @@ public class SitePageLinkCrawler {
 		return true;
 	}
 	
-	private void log(String output) {
+	private void log(String output, boolean asynchronous) {
 		_log.info(output);
-		System.out.println(output);		
+		if (!asynchronous) {
+			System.out.println(output);
+		}
+		
 	}
 	
 	@Reference
