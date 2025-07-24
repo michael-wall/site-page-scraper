@@ -120,12 +120,6 @@ public class LayoutCrawler {
             HttpGet httpGet = new HttpGet(layoutFullURL);
             
             HttpResponse httpResponse = _httpClient.execute(httpGet, httpClientContext);
-
-            //List<Cookie> cookies = httpClientContext.getCookieStore().getCookies();
-            
-            //for (Cookie cookie: cookies) {
-            //	_log.info(cookie.getDomain() + ", " + cookie.getName() + ", value: " + cookie.getValue());
-        	//}
             
             StatusLine statusLine = httpResponse.getStatusLine();
             
@@ -191,8 +185,6 @@ public class LayoutCrawler {
         	_log.info("Cookies count: " + cookies.length);
         	
             for (Cookie servletCookie : cookies) {
-            	//_log.info(servletCookie.getName() + ": " + servletCookie.getValue());
-            	
                 BasicClientCookie clientCookie = new BasicClientCookie(servletCookie.getName(), servletCookie.getValue());
                 clientCookie.setDomain(cookieDomain);
                 clientCookie.setPath(servletCookie.getPath() != null ? servletCookie.getPath() : "/");

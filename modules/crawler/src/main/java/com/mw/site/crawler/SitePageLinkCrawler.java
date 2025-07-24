@@ -123,6 +123,14 @@ public class SitePageLinkCrawler {
 		List<PageTO> pageTOs = new ArrayList<PageTO>();
 		if (layoutCrawler != null) {
 			for (Layout layout: layouts) {
+				if (pageTOs.size() % 50 == 0) {
+					if (asynchronous) {
+						log("Asynchronous Site Page Crawler still running in " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
+					} else {
+						log("Site Page Crawler still running in " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
+					}
+				}
+				
 				if (!isCrawlableLayout(layout)) continue; // Skip if not a content page or widget page...
 				
 				PageTO pageTO = new PageTO();
