@@ -41,9 +41,11 @@ public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
 		
 		boolean sitePageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerTriggered", false);
 		String sitePageCrawlerStartTime = ParamUtil.getString(renderRequest, "sitePageCrawlerStartTime", null);
+		boolean sitePageCrawlerNoPagesFound = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerNoPagesFound", false);
 		
 		renderRequest.setAttribute("sitePageCrawlerTriggered", sitePageCrawlerTriggered);
 		renderRequest.setAttribute("sitePageCrawlerStartTime", sitePageCrawlerStartTime);
+		renderRequest.setAttribute("sitePageCrawlerNoPagesFound", sitePageCrawlerNoPagesFound);
 		
 		return "/crawler.jsp";
 	}

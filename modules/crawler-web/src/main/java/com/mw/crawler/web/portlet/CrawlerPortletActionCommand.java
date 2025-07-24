@@ -1,12 +1,18 @@
 package com.mw.crawler.web.portlet;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -20,6 +26,7 @@ import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -88,21 +95,54 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		
 		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, themeDisplay.getUser());
 		
+		List<Layout> layouts = sitePageLinkCrawler.getPages(siteId, true);
+		
+		if (layouts == null || layouts.isEmpty()) {
+			actionResponse.setRenderParameter("sitePageCrawlerNoPagesFound", "true");
+			actionResponse.setRenderParameter("mvcRenderCommandName", "/home");
+			
+			return;
+		}
+		
 		// Asynchronous...
 		TransactionCommitCallbackUtil.registerCallback(new Callable<Void>() {
 		    @Override
 		    public Void call() throws Exception {
-		        // Use ExecutorService instead of raw threads
 		        Executors.newSingleThreadExecutor().submit(() -> {
 		            try {
 		            	_log.info("Background Crawler Started ...");
 		            	
-		            	String response = sitePageLinkCrawler.crawlPage(companyId, group, validateLinksOnPages, relativeUrlPrefix, themeDisplay.getUser(), outputFolder, layoutCrawler);
+		            	String response = sitePageLinkCrawler.crawlPage(companyId, group, validateLinksOnPages, relativeUrlPrefix, themeDisplay.getUser(), outputFolder, layoutCrawler, layouts);
 		            	
 		            	if (Validator.isNotNull(response)) {
 		            		_log.info("Output written to: " + response);
 		            		
-		            		// TODO Do something here... for example send an email with the file attached...
+		            		JSONObject notificationJSON = JSONFactoryUtil.createJSONObject();
+
+		            		notificationJSON.put("success", true);
+		            		notificationJSON.put("siteName", group.getName(themeDisplay.getUser().getLocale()));
+		            		notificationJSON.put("filePath", response);
+		            		notificationJSON.put("statusMessage", "");
+
+		            		try {
+		            			userNotificationEventLocalService.addUserNotificationEvent(
+		            				themeDisplay.getUser().getUserId(),
+		            				CrawlerPortletKeys.CRAWLER_PORTLET,
+		            				System.currentTimeMillis(),
+		            				UserNotificationDeliveryConstants.TYPE_WEBSITE,
+		            				0,
+		            				true,
+		            				notificationJSON.toString(),
+		            				false,
+		            				false,
+		            				new ServiceContext()
+		            			);
+		            			
+		            			_log.info("Notification sent to " + themeDisplay.getUser().getFullName());
+		            		
+		            		 } catch (Exception e) {
+		            			 _log.error("Error adding notification", e);
+		            		 }
 		            	}
 		            	
 		                _log.info("Background Crawler Completed ...");
@@ -143,6 +183,9 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	
 	@Reference(unbind = "-")
 	private GroupLocalService groupLocalService;
+	
+	@Reference(unbind = "-")
+	private UserNotificationEventLocalService userNotificationEventLocalService;
 	
 	private volatile SitePageCrawlerConfiguration _sitePageCrawlerConfiguration;	
 	

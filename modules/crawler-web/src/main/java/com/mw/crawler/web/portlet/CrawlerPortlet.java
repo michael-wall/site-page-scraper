@@ -24,7 +24,7 @@ import org.osgi.service.component.annotations.Modified;
 @Component(
 	immediate = true,
 	property = {
-		"com.liferay.portlet.display-category=category.tools",
+		"com.liferay.portlet.display-category=category.hidden",
 		"com.liferay.portlet.instanceable=false",
 		"javax.portlet.init-param.template-path=/",
 		"javax.portlet.init-param.view-template=/crawler.jsp",
@@ -49,9 +49,11 @@ public class CrawlerPortlet extends MVCPortlet {
 
 		boolean sitePageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerTriggered", false);
 		String sitePageCrawlerStartTime = ParamUtil.getString(renderRequest, "sitePageCrawlerStartTime", null);
+		boolean sitePageCrawlerNoPagesFound = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerNoPagesFound", false);
 		
 		renderRequest.setAttribute("sitePageCrawlerTriggered", sitePageCrawlerTriggered);
 		renderRequest.setAttribute("sitePageCrawlerStartTime", sitePageCrawlerStartTime);
+		renderRequest.setAttribute("sitePageCrawlerNoPagesFound", sitePageCrawlerNoPagesFound);
 
 		super.doView(renderRequest, renderResponse);
 		
