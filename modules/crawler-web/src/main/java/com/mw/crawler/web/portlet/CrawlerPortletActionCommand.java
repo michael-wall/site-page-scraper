@@ -155,7 +155,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	        
 		            	        objectEntry = objectEntryLocalService.addObjectEntry(
 		            	        	themeDisplay.getUser().getUserId(),
-		            	        	0,
+		            	        	siteId,
 		            	        	crawlerOutputDefinition.getObjectDefinitionId(),
 		            	        	objectEntryFields,
 		            	        	new ServiceContext()
