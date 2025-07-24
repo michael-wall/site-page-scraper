@@ -39,17 +39,30 @@ public class SitePageCrawlerUserNotificationHandler extends BaseUserNotification
 		String message = null;
 		boolean success = jsonObject.getBoolean("success");
 		String siteName = jsonObject.getString("siteName");
+		long objectEntryId = 0;
 		String filePath = null;
 		String statusMessage = null;
 		
 		if (success) {
 			filePath = jsonObject.getString("filePath");
 			
-			message = "asynchronous-site-page-crawler-completed-successfully";
+			objectEntryId = jsonObject.getLong("objectEntryId", 0);
 			
-			String[] arguments = { siteName, filePath };
+			if (objectEntryId == 0) {
+				message = "asynchronous-site-page-crawler-successful";
+				
+				String[] arguments = { siteName, filePath };
 
-			return _language.format(locale, message, arguments);
+				return _language.format(locale, message, arguments);			
+			} else {
+				message = "asynchronous-site-page-crawler-successful-uploaded";
+				
+				String objectDefinitionLabel = jsonObject.getString("objectDefinitionLabel");
+				
+				String[] arguments = { siteName, objectDefinitionLabel, "" + objectEntryId };
+
+				return _language.format(locale, message, arguments);			
+			}
 		} else {
 			statusMessage = jsonObject.getString("statusMessage");
 			

@@ -15,4 +15,7 @@ public interface SitePageCrawlerConfiguration {
 	
 	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.validateLinksOnPages.name", description = "field.validateLinksOnPages.desc")
 	public boolean validateLinksOnPages();
+	
+	@Meta.AD(deflt = "CRAWLER_OUTPUT", required = false, type = Type.String, name = "field.objectDefinitionERC.name", description = "field.objectDefinitionERC.desc")
+	public String objectDefinitionERC();
 }

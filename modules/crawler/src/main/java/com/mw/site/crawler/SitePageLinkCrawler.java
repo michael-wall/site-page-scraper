@@ -136,9 +136,9 @@ public class SitePageLinkCrawler {
 			for (Layout layout: layouts) {
 				if (pageTOs.size() % 50 == 0) {
 					if (asynchronous) {
-						log("Asynchronous Site Page Crawler still running in " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
+						log("Asynchronous Site Page Crawler still running in Site " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
 					} else {
-						log("Site Page Crawler still running in " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
+						log("Site Page Crawler still running in Site " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
 					}
 				}
 				

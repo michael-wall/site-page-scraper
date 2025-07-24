@@ -1,5 +1,10 @@
 package com.mw.crawler.web.portlet;
 
+import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -10,12 +15,14 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.mw.crawler.web.constants.CrawlerPortletKeys;
 import com.mw.site.crawler.LayoutCrawler;
@@ -23,11 +30,17 @@ import com.mw.site.crawler.SitePageLinkCrawler;
 import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
 import com.mw.site.crawler.model.ResponseTO;
 
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
@@ -63,6 +76,8 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		_log.info("outputFolder: " + _sitePageCrawlerConfiguration.outputFolder());
 		
 		_log.info("validateLinksOnPages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());
+		
+		_log.info("objectDefinitionERC: " + _sitePageCrawlerConfiguration.objectDefinitionERC());
 	}		
 	
 	@Override
@@ -114,11 +129,57 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	
 		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPage(companyId, group, validateLinksOnPages, relativeUrlPrefix, themeDisplay.getUser(), outputFolder, layoutCrawler, layouts);
 		            		            		
+		            	ObjectEntry objectEntry = null;
+		            	String objectDefinitionLabel = null;
+		            	
+		            	if (responseTO.isSuccess() && Validator.isNotNull(responseTO.getFilePath())) {
+		            		ObjectDefinition crawlerOutputDefinition = null;
+		            		
+		            		if (Validator.isNotNull(_sitePageCrawlerConfiguration.objectDefinitionERC())) {
+		            			crawlerOutputDefinition = objectDefinitionLocalService.fetchObjectDefinitionByExternalReferenceCode(_sitePageCrawlerConfiguration.objectDefinitionERC(), companyId);
+		            		}
+		            		
+		            		if (crawlerOutputDefinition != null) {
+		            			objectDefinitionLabel = crawlerOutputDefinition.getPluralLabel(themeDisplay.getUser().getLocale());
+		            			
+		            	        Path path = Paths.get(responseTO.getFilePath());
+		            	        String fileName = path.getFileName().toString();
+		            	        String fileMimeType = Files.probeContentType(path);
+		            	        byte[] fileBytes = Files.readAllBytes(path);
+		            			
+		            	        FileEntry fileEntry = dlAppLocalService.addFileEntry(UUID.randomUUID().toString(), themeDisplay.getUser().getUserId(), siteId, 0, fileName, fileMimeType, fileBytes, null, null, new ServiceContext());        			
+
+		            			Map<String, Serializable> objectEntryFields = new HashMap<>();
+		            			objectEntryFields.put("requestor", themeDisplay.getUser().getFullName());
+		            			objectEntryFields.put("site", group.getName(themeDisplay.getUser().getLocale()));
+		            			objectEntryFields.put("output", fileEntry.getFileEntryId());       
+		            	        
+		            	        objectEntry = objectEntryLocalService.addObjectEntry(
+		            	        	themeDisplay.getUser().getUserId(),
+		            	        	0,
+		            	        	crawlerOutputDefinition.getObjectDefinitionId(),
+		            	        	objectEntryFields,
+		            	        	new ServiceContext()
+		            	        );
+		            	        
+		            	        _log.info(objectDefinitionLabel + " Object Record " + objectEntry.getObjectEntryId() + " created for Site " + group.getName(themeDisplay.getUser().getLocale()) + " for " + themeDisplay.getUser().getFullName());
+		            		}
+		            	}
+		            	
 		            	JSONObject notificationJSON = JSONFactoryUtil.createJSONObject();
 
 		            	notificationJSON.put("success", responseTO.isSuccess());
 		            	notificationJSON.put("siteName", group.getName(themeDisplay.getUser().getLocale()));
-		            	notificationJSON.put("filePath", responseTO.getFilePath());
+		            	
+		            	if (responseTO.isSuccess()) {
+			            	notificationJSON.put("filePath", responseTO.getFilePath());
+
+		            		if (objectEntry != null) {		            			
+		            			notificationJSON.put("objectEntryId", objectEntry.getObjectEntryId());
+		            			notificationJSON.put("objectDefinitionLabel", objectDefinitionLabel);
+		            		}
+		            	}
+		   
 		            	notificationJSON.put("statusMessage", responseTO.getStatusMessage());
 
 		            	try {
@@ -136,7 +197,6 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            		);
 		            			
 		            		_log.info("Liferay Notification sent to " + themeDisplay.getUser().getFullName());
-		            		
 		            	} catch (Exception e) {
 		            		_log.error("Error adding notification", e);
 		            	}
@@ -183,7 +243,16 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	@Reference(unbind = "-")
 	private UserNotificationEventLocalService userNotificationEventLocalService;
 	
-	private volatile SitePageCrawlerConfiguration _sitePageCrawlerConfiguration;	
+	private volatile SitePageCrawlerConfiguration _sitePageCrawlerConfiguration;
+	
+    @Reference
+    private ObjectEntryLocalService objectEntryLocalService;
+
+    @Reference
+    private ObjectDefinitionLocalService objectDefinitionLocalService;
+    
+    @Reference
+    private DLAppLocalService dlAppLocalService;    
 	
  	private static final Log _log = LogFactoryUtil.getLog(CrawlerPortletActionCommand.class);	
 }
