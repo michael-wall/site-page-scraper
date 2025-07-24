@@ -39,10 +39,12 @@ public class CrawlerPanelApp extends BasePanelApp {
 	@Reference(
 		target = "(javax.portlet.name=" + CrawlerPortletKeys.CRAWLER_PORTLET + ")"
 	)
-	private Portlet _portlet;	
+	private Portlet _portlet;
 	
 	@Override
 	public boolean isShow(PermissionChecker permissionChecker, Group group) throws PortalException {
+		
+		if (!permissionChecker.isSignedIn()) return false;
 		
 		if (group.isUserGroup()) return false;
 		if (!group.isActive()) return false;
@@ -66,6 +68,8 @@ public class CrawlerPanelApp extends BasePanelApp {
 		if (permissionChecker.isCompanyAdmin(companyId)) return true;
 		
 		if (permissionChecker.isGroupAdmin(group.getGroupId())) return true;
+		
+		if (permissionChecker.isGroupOwner(group.getGroupId())) return true;
 		
 		return super.isShow(permissionChecker, group);
 	}	

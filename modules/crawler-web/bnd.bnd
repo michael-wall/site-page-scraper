@@ -1,5 +1,5 @@
 Bundle-Name: crawler-web
-Bundle-SymbolicName: com.mw.site.crawler.widget
+Bundle-SymbolicName: com.mw.site.crawler.web
 Bundle-Version: 1.0.0
 Export-Package: crawler.widget.constants
 Provide-Capability:\

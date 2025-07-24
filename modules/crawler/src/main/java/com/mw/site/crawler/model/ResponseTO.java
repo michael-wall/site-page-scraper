@@ -8,6 +8,7 @@ public class ResponseTO implements Serializable{
 	private boolean success;
 	private String filePath;
 	private String statusMessage;
+	private long crawledPages;
 	
 	public boolean isSuccess() {
 		return success;
@@ -28,10 +29,17 @@ public class ResponseTO implements Serializable{
 		this.statusMessage = statusMessage;
 	}
 	
-	public ResponseTO(boolean success, String filePath, String statusMessage) {
+	public long getCrawledPages() {
+		return crawledPages;
+	}
+	public void setCrawledPages(long crawledPages) {
+		this.crawledPages = crawledPages;
+	}
+	public ResponseTO(boolean success, String filePath, String statusMessage, long crawledPages) {
 		super();
 		this.success = success;
 		this.filePath = filePath;
 		this.statusMessage = statusMessage;
+		this.crawledPages = crawledPages;
 	}
 }

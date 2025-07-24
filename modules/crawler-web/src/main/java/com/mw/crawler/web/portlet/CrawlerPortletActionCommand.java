@@ -82,9 +82,6 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	
 	@Override
 	protected void doProcessAction(ActionRequest actionRequest, ActionResponse actionResponse) throws Exception {
-		
-		_log.info("doView");
-		
 		ThemeDisplay themeDisplay = (ThemeDisplay) actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 		
 		HttpServletRequest httpRequest = PortalUtil.getHttpServletRequest(actionRequest);
@@ -152,7 +149,9 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            			Map<String, Serializable> objectEntryFields = new HashMap<>();
 		            			objectEntryFields.put("requestor", themeDisplay.getUser().getFullName());
 		            			objectEntryFields.put("site", group.getName(themeDisplay.getUser().getLocale()));
-		            			objectEntryFields.put("output", fileEntry.getFileEntryId());       
+		            			objectEntryFields.put("output", fileEntry.getFileEntryId());
+		            			objectEntryFields.put("validateLinksOnPages", validateLinksOnPages); 
+		            			objectEntryFields.put("crawledPages", responseTO.getCrawledPages()); 
 		            	        
 		            	        objectEntry = objectEntryLocalService.addObjectEntry(
 		            	        	themeDisplay.getUser().getUserId(),
@@ -163,6 +162,8 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	        );
 		            	        
 		            	        _log.info(objectDefinitionLabel + " Object Record " + objectEntry.getObjectEntryId() + " created for Site " + group.getName(themeDisplay.getUser().getLocale()) + " for " + themeDisplay.getUser().getFullName());
+		            		} else {
+		            			_log.info("Unable to create Object Record as Object Definition not found: " + _sitePageCrawlerConfiguration.objectDefinitionERC());
 		            		}
 		            	}
 		            	

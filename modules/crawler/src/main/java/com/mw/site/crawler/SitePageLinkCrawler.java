@@ -229,7 +229,7 @@ public class SitePageLinkCrawler {
 				log(message, asynchronous);	
 			}
 			
-			return new ResponseTO(false, null, message);
+			return new ResponseTO(false, null, message, 0);
 		}
 		
 		File outputFolderFile = new File(outputFolder);
@@ -245,15 +245,18 @@ public class SitePageLinkCrawler {
 		
 		log("Done, Output written to: " + normalizedOutputFile, asynchronous);
 		
-		return new ResponseTO(true, normalizedOutputFile.toString(), null);
+		return new ResponseTO(true, normalizedOutputFile.toString(), null, pageTOs.size());
 	}
 
 	private boolean isCrawlableLayout(Layout layout) {
 		if (Validator.isNull(layout)) return false;
-		
-		if (layout.getFriendlyURL().equalsIgnoreCase("/crawler")) return false;
-		
 		if (Validator.isNull(layout.getType())) return false;
+		
+		if (layout.isHidden()) return false;
+		if (layout.isDraft() || layout.isDraftLayout()) return false;
+		if (!layout.isApproved()) return false;
+		if (layout.isInactive() || layout.isIncomplete()) return false;
+		if (layout.isExpired()) return false;
 		
 		if (layout.getType().equalsIgnoreCase("content") || layout.getType().equalsIgnoreCase("portlet")) {
 			return true;
