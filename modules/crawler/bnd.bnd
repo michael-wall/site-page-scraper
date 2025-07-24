@@ -8,6 +8,8 @@ Import-Package:\
 	!org.apache.log4j,\
 	\
 	*
-Export-Package: com.mw.site.crawler,\
-	com.mw.site.crawler.config
+Export-Package: \
+	com.mw.site.crawler,\
+	com.mw.site.crawler.config,\
+	com.mw.site.crawler.model
 -fixupmessages "Classes found in the wrong directory"; restrict:=error; is:=warning

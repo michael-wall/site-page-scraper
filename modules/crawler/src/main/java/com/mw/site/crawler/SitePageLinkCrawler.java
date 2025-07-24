@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.mw.site.crawler.model.LinkTO;
 import com.mw.site.crawler.model.PageTO;
+import com.mw.site.crawler.model.ResponseTO;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -47,7 +48,7 @@ public class SitePageLinkCrawler {
 		if (_log.isInfoEnabled()) _log.info("Activating...");
 	}
 	
-	public String crawlPage(long companyId, Group group, boolean validateLinksOnPages, String relativeUrlPrefix, User user, String outputFolder, LayoutCrawler layoutCrawler, List<Layout> layouts) {
+	public ResponseTO crawlPage(long companyId, Group group, boolean validateLinksOnPages, String relativeUrlPrefix, User user, String outputFolder, LayoutCrawler layoutCrawler, List<Layout> layouts) {
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("GroupId: " + group.getGroupId());
@@ -123,7 +124,7 @@ public class SitePageLinkCrawler {
 		return layouts;
 	}
 
-	private String crawlPages(String relativeUrlPrefix, String outputFolder,
+	private ResponseTO crawlPages(String relativeUrlPrefix, String outputFolder,
 			boolean validateLinksOnPagesBoolean, User user, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts, boolean asynchronous) {
 		
 		boolean hasLayouts = false;
@@ -216,13 +217,19 @@ public class SitePageLinkCrawler {
 		}
 		
 		if (pageTOs.isEmpty()) {
+			String message = "";
+			
 			if (hasLayouts) {
-				log("No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.", asynchronous);		
+				message = "No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.";
+				
+				log(message, asynchronous);		
 			} else {
-				log("No Pages found. Ensure that the Crawler settings were correct.", asynchronous);	
+				message = "No Pages found. Ensure that the Crawler settings were correct.";
+				
+				log(message, asynchronous);	
 			}
 			
-			return null;
+			return new ResponseTO(false, null, message);
 		}
 		
 		File outputFolderFile = new File(outputFolder);
@@ -238,7 +245,7 @@ public class SitePageLinkCrawler {
 		
 		log("Done, Output written to: " + normalizedOutputFile, asynchronous);
 		
-		return normalizedOutputFile.toString();
+		return new ResponseTO(true, normalizedOutputFile.toString(), null);
 	}
 
 	private boolean isCrawlableLayout(Layout layout) {

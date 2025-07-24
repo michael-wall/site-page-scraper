@@ -53,9 +53,9 @@ public class SitePageCrawlerUserNotificationHandler extends BaseUserNotification
 		} else {
 			statusMessage = jsonObject.getString("statusMessage");
 			
-			message = "asynchronous-site-page-crawler-didnt-completed-successfully-check-the-logs";
+			message = "asynchronous-site-page-crawler-unsuccessful";
 			
-			String[] arguments = { siteName };
+			String[] arguments = { siteName, statusMessage };
 			
 			return _language.format(locale, message, arguments);
 		}

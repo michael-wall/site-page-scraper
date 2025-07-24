@@ -16,12 +16,12 @@ import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.mw.crawler.web.constants.CrawlerPortletKeys;
 import com.mw.site.crawler.LayoutCrawler;
 import com.mw.site.crawler.SitePageLinkCrawler;
 import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
+import com.mw.site.crawler.model.ResponseTO;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -110,44 +110,40 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		    public Void call() throws Exception {
 		        Executors.newSingleThreadExecutor().submit(() -> {
 		            try {
-		            	_log.info("Background Crawler Started ...");
+		            	_log.info("Background Crawler Started for Site " + group.getName(themeDisplay.getUser().getLocale()) + " for " + themeDisplay.getUser().getFullName());
 		            	
-		            	String response = sitePageLinkCrawler.crawlPage(companyId, group, validateLinksOnPages, relativeUrlPrefix, themeDisplay.getUser(), outputFolder, layoutCrawler, layouts);
-		            	
-		            	if (Validator.isNotNull(response)) {
-		            		_log.info("Output written to: " + response);
-		            		
-		            		JSONObject notificationJSON = JSONFactoryUtil.createJSONObject();
+		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPage(companyId, group, validateLinksOnPages, relativeUrlPrefix, themeDisplay.getUser(), outputFolder, layoutCrawler, layouts);
+		            		            		
+		            	JSONObject notificationJSON = JSONFactoryUtil.createJSONObject();
 
-		            		notificationJSON.put("success", true);
-		            		notificationJSON.put("siteName", group.getName(themeDisplay.getUser().getLocale()));
-		            		notificationJSON.put("filePath", response);
-		            		notificationJSON.put("statusMessage", "");
+		            	notificationJSON.put("success", responseTO.isSuccess());
+		            	notificationJSON.put("siteName", group.getName(themeDisplay.getUser().getLocale()));
+		            	notificationJSON.put("filePath", responseTO.getFilePath());
+		            	notificationJSON.put("statusMessage", responseTO.getStatusMessage());
 
-		            		try {
-		            			userNotificationEventLocalService.addUserNotificationEvent(
-		            				themeDisplay.getUser().getUserId(),
-		            				CrawlerPortletKeys.CRAWLER_PORTLET,
-		            				System.currentTimeMillis(),
-		            				UserNotificationDeliveryConstants.TYPE_WEBSITE,
-		            				0,
-		            				true,
-		            				notificationJSON.toString(),
-		            				false,
-		            				false,
-		            				new ServiceContext()
-		            			);
+		            	try {
+		            		userNotificationEventLocalService.addUserNotificationEvent(
+		            			themeDisplay.getUser().getUserId(),
+		            			CrawlerPortletKeys.CRAWLER_PORTLET,
+		            			System.currentTimeMillis(),
+		            			UserNotificationDeliveryConstants.TYPE_WEBSITE,
+		            			0,
+		            			true,
+		            			notificationJSON.toString(),
+		            			false,
+		            			false,
+		            			new ServiceContext()
+		            		);
 		            			
-		            			_log.info("Notification sent to " + themeDisplay.getUser().getFullName());
+		            		_log.info("Liferay Notification sent to " + themeDisplay.getUser().getFullName());
 		            		
-		            		 } catch (Exception e) {
-		            			 _log.error("Error adding notification", e);
-		            		 }
+		            	} catch (Exception e) {
+		            		_log.error("Error adding notification", e);
 		            	}
 		            	
-		                _log.info("Background Crawler Completed ...");
+		            	_log.info("Background Crawler Completed for Site " + group.getName(themeDisplay.getUser().getLocale()) + " for " + themeDisplay.getUser().getFullName());
 		            } catch (Exception e) {
-		                _log.error("Error in Background Crawler Thread", e);
+		                _log.error("Error in Background Crawler Thread for Site " + group.getName(themeDisplay.getUser().getLocale()) + " for " + themeDisplay.getUser().getFullName(), e);
 		            }
 		        });
 
