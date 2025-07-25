@@ -95,6 +95,8 @@ public class SitePageLinkCrawler {
 			return;
 		}
 		
+		_log.info("Locale: " + user.getLocale());
+		
 		Group group = groupLocalService.fetchGroup(siteId);
 		
 		if (group == null || !group.isSite()) {

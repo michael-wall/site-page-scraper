@@ -149,6 +149,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            			Map<String, Serializable> objectEntryFields = new HashMap<>();
 		            			objectEntryFields.put("requestor", themeDisplay.getUser().getFullName());
 		            			objectEntryFields.put("site", group.getName(themeDisplay.getUser().getLocale()));
+		            			objectEntryFields.put("locale", "" + themeDisplay.getUser().getLocale()); 
 		            			objectEntryFields.put("output", fileEntry.getFileEntryId());
 		            			objectEntryFields.put("validateLinksOnPages", validateLinksOnPages); 
 		            			objectEntryFields.put("crawledPages", responseTO.getCrawledPages()); 
