@@ -349,6 +349,12 @@ public class SitePageLinkCrawler {
 		
 		if (href.toLowerCase().startsWith("javascript")) return false;
 		
+		if (href.toLowerCase().startsWith("mailto:")) return false;
+		
+		if (href.toLowerCase().startsWith("file://")) return false;
+		
+		if (href.toLowerCase().startsWith("tel:")) return false;
+		
 		if (href.toLowerCase().startsWith("#")) return false; // Skip if anchor link to current page...
 		
 		if (href.toLowerCase().indexOf("/~/control_panel/manage".toLowerCase()) >= 0) return false;
