@@ -127,125 +127,131 @@ public class SitePageLinkCrawler {
 	private ResponseTO crawlPages(String relativeUrlPrefix, String outputFolder,
 			boolean validateLinksOnPagesBoolean, User user, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts, boolean asynchronous) {
 		
-		boolean hasLayouts = false;
-		
-		if (!layouts.isEmpty()) hasLayouts = true;
-				
-		List<PageTO> pageTOs = new ArrayList<PageTO>();
-		if (layoutCrawler != null) {
-			for (Layout layout: layouts) {
-				if (pageTOs.size() % 50 == 0) {
-					if (asynchronous) {
-						log("Asynchronous Site Page Crawler still running in Site " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
-					} else {
-						log("Site Page Crawler still running in Site " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
-					}
-				}
-				
-				if (!isCrawlableLayout(layout)) continue; // Skip if not a content page or widget page...
-				
-				PageTO pageTO = new PageTO();
-				
-				pageTO.setName(layout.getName(user.getLocale()));
-				pageTO.setPrivatePage(layout.isPrivateLayout());
-				
-				List<Element> webContentArticles = new ArrayList<Element>();
-				List<Element> links = new ArrayList<Element>();
-	
-				String[] responseArray = layoutCrawler.getLayoutContent(layout, user.getLocale());
-				
-				if (Validator.isNotNull(responseArray) && Validator.isNotNull(responseArray[0]) && Validator.isNotNull(responseArray[1])) {
-					String pageURL = responseArray[0];
-					String pageHtml = responseArray[1];
-								
-					pageTO.setUrl(pageURL);
-					
-					Document htmlDocument = Jsoup.parse(pageHtml.toString());
-	
-					// <section id="content"> or similar...
-					Element body = htmlDocument.selectFirst("section#content"); // Ensure this is valid if using a custom theme
-	
-					if (Validator.isNull(body)) {
-						_log.info(pageTO.getName() + ": element body is null.");
-					} else {
-						// <div class="journal-content-article " .....
-						webContentArticles = body.select("div.journal-content-article").asList();
-					}
-					
-					// Get all links inside the WCM Articles
-					for (Element webContentArticle: webContentArticles) {
-						links.addAll(webContentArticle.select("a").asList());
-					}
-					
-					List<LinkTO> linkTOs = new ArrayList<LinkTO>();
-					
-					long validLinkCount = 0;
-					long invalidLinkCount = 0;
-					
-					if (!links.isEmpty()) {
-						for (Element link: links) {
-							if (includeLink(link)) {
-								String href = link.attr("href");
-								String label = link.text();
-								String[] linkStatus = {"", ""};
-								
-								if (validateLinksOnPagesBoolean) {
-									linkStatus = layoutCrawler.validateLink(href, relativeUrlPrefix, user.getLocale());
-									
-									if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
-										validLinkCount += 1;
-									} else {
-										invalidLinkCount += 1;
-									}							
-								}
-								
-								linkTOs.add(new LinkTO(href, label, linkStatus[0], linkStatus[1]));
-							}
-						}					
-					}
-					
-					if (validateLinksOnPagesBoolean) {
-						pageTO.setValidLinkCount(validLinkCount);
-						pageTO.setInvalidLinkCount(invalidLinkCount);	
-					}
-					
-					pageTO.setLinks(linkTOs);
-	
-					pageTOs.add(pageTO);
-				}
-			}
-		}
-		
-		if (pageTOs.isEmpty()) {
-			String message = "";
+		try {
+			boolean hasLayouts = false;
 			
-			if (hasLayouts) {
-				message = "No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.";
-				
-				log(message, asynchronous);		
-			} else {
-				message = "No Pages found. Ensure that the Crawler settings were correct.";
-				
-				log(message, asynchronous);	
-			}
-			
-			return new ResponseTO(false, null, message, 0);
-		}
-		
-		File outputFolderFile = new File(outputFolder);
-		if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
-		
-		String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + user.getLocale().toString() + "_" + System.currentTimeMillis() + ".txt";
+			if (!layouts.isEmpty()) hasLayouts = true;
+					
+			List<PageTO> pageTOs = new ArrayList<PageTO>();
+			if (layoutCrawler != null) {
+				for (Layout layout: layouts) {
+					if (pageTOs.size() % 50 == 0) {
+						if (asynchronous) {
+							log("Asynchronous Site Page Crawler still running in Site " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
+						} else {
+							log("Site Page Crawler still running in Site " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
+						}
+					}
+					
+					if (!isCrawlableLayout(layout)) continue; // Skip if not a content page or widget page...
+					
+					PageTO pageTO = new PageTO();
+					
+					pageTO.setName(layout.getName(user.getLocale()));
+					pageTO.setPrivatePage(layout.isPrivateLayout());
+					
+					List<Element> webContentArticles = new ArrayList<Element>();
+					List<Element> links = new ArrayList<Element>();
 
-		outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, outputFolderFile, fileName);
-		
-		String outputFile = outputFolderFile.getAbsolutePath() + "/" + fileName;
+					String[] responseArray = layoutCrawler.getLayoutContent(layout, user.getLocale());
+					
+					if (Validator.isNotNull(responseArray) && Validator.isNotNull(responseArray[0]) && Validator.isNotNull(responseArray[1])) {
+						String pageURL = responseArray[0];
+						String pageHtml = responseArray[1];
+									
+						pageTO.setUrl(pageURL);
+						
+						Document htmlDocument = Jsoup.parse(pageHtml.toString());
+
+						// <section id="content"> or similar...
+						Element body = htmlDocument.selectFirst("section#content"); // Ensure this is valid if using a custom theme
+
+						if (Validator.isNull(body)) {
+							_log.info(pageTO.getName() + ": element body is null.");
+						} else {
+							// <div class="journal-content-article " .....
+							webContentArticles = body.select("div.journal-content-article").asList();
+						}
+						
+						// Get all links inside the WCM Articles
+						for (Element webContentArticle: webContentArticles) {
+							links.addAll(webContentArticle.select("a").asList());
+						}
+						
+						List<LinkTO> linkTOs = new ArrayList<LinkTO>();
+						
+						long validLinkCount = 0;
+						long invalidLinkCount = 0;
+						
+						if (!links.isEmpty()) {
+							for (Element link: links) {
+								if (includeLink(link)) {
+									String href = link.attr("href");
+									String label = link.text();
+									String[] linkStatus = {"", ""};
+									
+									if (validateLinksOnPagesBoolean) {
+										linkStatus = layoutCrawler.validateLink(href, relativeUrlPrefix, user.getLocale());
+										
+										if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
+											validLinkCount += 1;
+										} else {
+											invalidLinkCount += 1;
+										}							
+									}
+									
+									linkTOs.add(new LinkTO(href, label, linkStatus[0], linkStatus[1]));
+								}
+							}					
+						}
+						
+						if (validateLinksOnPagesBoolean) {
+							pageTO.setValidLinkCount(validLinkCount);
+							pageTO.setInvalidLinkCount(invalidLinkCount);	
+						}
+						
+						pageTO.setLinks(linkTOs);
+
+						pageTOs.add(pageTO);
+					}
+				}
+			}
+			
+			if (pageTOs.isEmpty()) {
+				String message = "";
 				
-		Path normalizedOutputFile = Paths.get(outputFile).normalize();
-		
-		log("Done, Output written to: " + normalizedOutputFile, asynchronous);
-		
-		return new ResponseTO(true, normalizedOutputFile.toString(), null, pageTOs.size());
+				if (hasLayouts) {
+					message = "No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.";
+					
+					log(message, asynchronous);		
+				} else {
+					message = "No Pages found. Ensure that the Crawler settings were correct.";
+					
+					log(message, asynchronous);	
+				}
+				
+				return new ResponseTO(false, null, message, 0);
+			}
+			
+			File outputFolderFile = new File(outputFolder);
+			if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
+			
+			String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + user.getLocale().toString() + "_" + System.currentTimeMillis() + ".txt";
+
+			outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, outputFolderFile, fileName);
+			
+			String outputFile = outputFolderFile.getAbsolutePath() + "/" + fileName;
+					
+			Path normalizedOutputFile = Paths.get(outputFile).normalize();
+			
+			log("Done, Output written to: " + normalizedOutputFile, asynchronous);
+			
+			return new ResponseTO(true, normalizedOutputFile.toString(), null, pageTOs.size());
+		} catch (Exception e) {
+			_log.error(e.getClass() + ": " + e.getMessage());
+			
+			return new ResponseTO(false, null, "Exception occurred: " + e.getClass() + ": " + e.getMessage(), 0);
+		}
 	}
 
 	private boolean isCrawlableLayout(Layout layout) {
@@ -317,8 +323,11 @@ public class SitePageLinkCrawler {
 				pageCount += 1;
 			}
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} finally {
+			_log.error(e.getClass() + ": " + e.getMessage());
+		} catch (Exception e) {
+			_log.error(e.getClass() + ": " + e.getMessage());
+		}
+		finally {
 			if (printWriter != null) printWriter.close();
 			
 			printWriter.close();
@@ -345,10 +354,10 @@ public class SitePageLinkCrawler {
 	
 	private void log(String output, boolean asynchronous) {
 		_log.info(output);
+		
 		if (!asynchronous) {
 			System.out.println(output);
 		}
-		
 	}
 	
 	@Reference

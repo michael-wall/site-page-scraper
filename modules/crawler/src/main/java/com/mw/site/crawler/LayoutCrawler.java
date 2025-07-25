@@ -91,11 +91,11 @@ public class LayoutCrawler {
             responseStringArray[1] = "" + statusLine.getReasonPhrase();
 
             return responseStringArray;
-        } catch (Exception exception) {
-        	_log.info("Exception validating url: " + url +", " + exception.getMessage());
+        } catch (Exception e) {
+        	_log.info("Exception validating url: " + url + ", " + e.getClass() + ": " + e.getMessage());
         	
         	responseStringArray[0] = "-1";
-        	responseStringArray[1] = exception.getMessage();
+        	responseStringArray[1] = e.getMessage();
         } finally {
         	try {
         		if (entity != null) EntityUtils.consume(entity);
@@ -132,8 +132,8 @@ public class LayoutCrawler {
                 return responseStringArray;
             } 
         }
-        catch (Exception exception) {
-        	 _log.info("Unable to crawl layout: " + layoutFullURL + ", Exception:" +  exception.getMessage());
+        catch (Exception e) {
+        	 _log.info("Unable to crawl layout: " + layoutFullURL + ", " + e.getClass() + ": " + e.getMessage());
         } finally {
         	try {
         		if (entity != null) EntityUtils.consume(entity);
