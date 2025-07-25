@@ -37,6 +37,7 @@ import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,6 +145,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	        String fileMimeType = Files.probeContentType(path);
 		            	        byte[] fileBytes = Files.readAllBytes(path);
 		            			
+		            	        // Filename needs to be unique in file system AND in the DAM DLFolder..
 		            	        FileEntry fileEntry = dlAppLocalService.addFileEntry(UUID.randomUUID().toString(), themeDisplay.getUser().getUserId(), siteId, 0, fileName, fileMimeType, fileBytes, null, null, new ServiceContext());        			
 
 		            			Map<String, Serializable> objectEntryFields = new HashMap<>();
@@ -153,6 +155,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            			objectEntryFields.put("output", fileEntry.getFileEntryId());
 		            			objectEntryFields.put("validateLinksOnPages", validateLinksOnPages); 
 		            			objectEntryFields.put("crawledPages", responseTO.getCrawledPages()); 
+		            			objectEntryFields.put("created", new Date()); 
 		            	        
 		            	        objectEntry = objectEntryLocalService.addObjectEntry(
 		            	        	themeDisplay.getUser().getUserId(),
