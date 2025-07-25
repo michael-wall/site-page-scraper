@@ -49,6 +49,7 @@ public class SitePageLinkCrawler {
 	}
 	
 	public ResponseTO crawlPage(long companyId, Group group, boolean validateLinksOnPages, String relativeUrlPrefix, User user, String outputFolder, LayoutCrawler layoutCrawler, List<Layout> layouts) {
+		_log.info("starting crawlPages asynchronous");
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("GroupId: " + group.getGroupId());
@@ -60,6 +61,7 @@ public class SitePageLinkCrawler {
 	}
 
 	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputFolder) {
+		_log.info("starting crawlPages synchronous");
 		
 		long companyId = Long.valueOf(companyIdString);
 		long siteId = Long.valueOf(siteIdString);
