@@ -3,7 +3,10 @@ package com.mw.crawler.web.portlet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.mw.crawler.web.constants.CrawlerPortletKeys;
 
 import java.util.Map;
@@ -37,6 +40,12 @@ public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
 	
 	@Override
 	public String render(RenderRequest renderRequest, RenderResponse renderResponse) throws PortletException {
+		ThemeDisplay themeDisplay = (ThemeDisplay) renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+		
+		if (Validator.isNull(themeDisplay.getUser()) || themeDisplay.getUser().isGuestUser()) {
+			return "/noAccess.jsp";
+		}
+		
 		boolean sitePageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerTriggered", false);
 		String sitePageCrawlerStartTime = ParamUtil.getString(renderRequest, "sitePageCrawlerStartTime", null);
 		boolean sitePageCrawlerNoPagesFound = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerNoPagesFound", false);

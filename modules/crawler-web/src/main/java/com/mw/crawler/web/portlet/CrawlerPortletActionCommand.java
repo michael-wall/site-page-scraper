@@ -87,6 +87,12 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	protected void doProcessAction(ActionRequest actionRequest, ActionResponse actionResponse) throws Exception {
 		ThemeDisplay themeDisplay = (ThemeDisplay) actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 		
+		if (Validator.isNull(themeDisplay.getUser()) || themeDisplay.getUser().isGuestUser()) {
+			actionResponse.setRenderParameter("mvcRenderCommandName", "/noAccess");
+			
+			return;
+		}
+		
 		HttpServletRequest httpRequest = PortalUtil.getHttpServletRequest(actionRequest);
 		
 		long companyId = themeDisplay.getCompanyId();

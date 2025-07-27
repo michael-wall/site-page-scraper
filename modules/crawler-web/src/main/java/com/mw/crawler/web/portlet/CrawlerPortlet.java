@@ -3,7 +3,10 @@ package com.mw.crawler.web.portlet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.mw.crawler.web.constants.CrawlerPortletKeys;
 
 import java.io.IOException;
@@ -44,8 +47,14 @@ public class CrawlerPortlet extends MVCPortlet {
 	}	
 	
 	@Override
-	public void doView(RenderRequest renderRequest, RenderResponse renderResponse)
-			throws IOException, PortletException {
+	public void doView(RenderRequest renderRequest, RenderResponse renderResponse) throws IOException, PortletException {
+		ThemeDisplay themeDisplay = (ThemeDisplay) renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+		
+		if (Validator.isNull(themeDisplay.getUser()) || themeDisplay.getUser().isGuestUser()) {
+			include("/noAccess.jsp", renderRequest, renderResponse);
+			
+			return;
+		}
 
 		boolean sitePageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerTriggered", false);
 		String sitePageCrawlerStartTime = ParamUtil.getString(renderRequest, "sitePageCrawlerStartTime", null);
@@ -58,8 +67,7 @@ public class CrawlerPortlet extends MVCPortlet {
 		super.doView(renderRequest, renderResponse);
 		
 		return;
-	}	
-	
+	}
 	
  	private static final Log _log = LogFactoryUtil.getLog(CrawlerPortlet.class);		
 }
