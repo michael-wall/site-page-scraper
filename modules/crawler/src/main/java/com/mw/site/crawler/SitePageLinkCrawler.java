@@ -255,7 +255,7 @@ public class SitePageLinkCrawler {
 			
 			return new ResponseTO(true, normalizedOutputFilePath.toString(), null, pageTOs.size());
 		} catch (Exception e) {
-			_log.error(e.getClass() + ": " + e.getMessage());
+			_log.error(e.getClass() + ": " + e.getMessage(), e);
 			
 			return new ResponseTO(false, null, "Exception occurred: " + e.getClass() + ": " + e.getMessage(), 0);
 		}
@@ -340,9 +340,9 @@ public class SitePageLinkCrawler {
 			return true;
 			
 		} catch (FileNotFoundException e) {
-			_log.error(e.getClass() + ": " + e.getMessage());
+			_log.error(e.getClass() + ": " + e.getMessage(), e);
 		} catch (Exception e) {
-			_log.error(e.getClass() + ": " + e.getMessage());
+			_log.error(e.getClass() + ": " + e.getMessage(), e);
 		}
 		finally {
 			if (printWriter != null) printWriter.close();
