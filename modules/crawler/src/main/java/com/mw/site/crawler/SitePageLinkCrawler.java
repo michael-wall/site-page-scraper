@@ -241,16 +241,19 @@ public class SitePageLinkCrawler {
 			if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
 			
 			String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + user.getLocale().toString() + "_" + System.currentTimeMillis() + ".txt";
+			String outputFilePath = outputFolderFile.getAbsolutePath() + "/" + fileName;
 
-			outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, outputFolderFile, fileName);
+			Path normalizedOutputFilePath = Paths.get(outputFilePath).normalize();
 			
-			String outputFile = outputFolderFile.getAbsolutePath() + "/" + fileName;
-					
-			Path normalizedOutputFile = Paths.get(outputFile).normalize();
+			boolean fileGenerated = outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, normalizedOutputFilePath.toString());
 			
-			log("Done, Output written to: " + normalizedOutputFile, asynchronous);
+			if (fileGenerated) {
+				log("Done, Output written to: " + normalizedOutputFilePath, asynchronous);
+			} else {
+				return new ResponseTO(false, null, "Output file not generated.", 0);
+			}
 			
-			return new ResponseTO(true, normalizedOutputFile.toString(), null, pageTOs.size());
+			return new ResponseTO(true, normalizedOutputFilePath.toString(), null, pageTOs.size());
 		} catch (Exception e) {
 			_log.error(e.getClass() + ": " + e.getMessage());
 			
@@ -275,39 +278,46 @@ public class SitePageLinkCrawler {
 		return false;
 	}
 	
-	private void outputToTxtFile(boolean validateLinksOnPagesBoolean, List<PageTO> pageTOs, File outputFolderFile,
-			String fileName) {
+	private boolean outputToTxtFile(boolean validateLinksOnPagesBoolean, List<PageTO> pageTOs, String outputFilePath) {
 		PrintWriter printWriter = null;
 		
 		try {
-			printWriter = new PrintWriter(outputFolderFile.getAbsolutePath() + "/" + fileName);
+			printWriter = new PrintWriter(outputFilePath);
 			
 			long pageCount = 1;
 			
 			for (PageTO pageTO: pageTOs) {
+				boolean pageHasLinks = false;
+				if (Validator.isNotNull(pageTO.getLinks()) && !pageTO.getLinks().isEmpty()) {
+					pageHasLinks = true;
+				}
+				
 				printWriter.println("**********************************************************************");
 				printWriter.println("[" + pageCount + "] Page Name: " + pageTO.getName());
 				printWriter.println("[" + pageCount + "] Page URL: " + pageTO.getUrl());
 				printWriter.println("[" + pageCount + "] Private Page: " + pageTO.isPrivatePage());
-				printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
+			
+				if (pageHasLinks) {
+					printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
+				} else {
+					printWriter.println("[" + pageCount + "] Page Link Count: 0");
+				}				
 				
-				if (validateLinksOnPagesBoolean) {	
-					if (pageTO.getLinks().size() > 0) {
-						printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
-						printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());						
-					}
+				if (validateLinksOnPagesBoolean && pageHasLinks) {
+					printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
+					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
 				}
 				printWriter.println("**********************************************************************");
 				printWriter.println("");
 				
 				List<LinkTO> linkTOs = pageTO.getLinks();
 				
-				if (!linkTOs.isEmpty()) {
+				if (pageHasLinks) {
 					for (LinkTO linkTO: linkTOs) {
 						printWriter.println("Link Label: " + linkTO.getLabel());
 						printWriter.println("Link URL: " + linkTO.getHref());
 						if (validateLinksOnPagesBoolean) {
-							if (linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
+							if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
 								printWriter.println("Link appears to be valid.");
 							} else {
 								if (Validator.isNotNull(linkTO.getStatusMessage())) {
@@ -326,6 +336,9 @@ public class SitePageLinkCrawler {
 				
 				pageCount += 1;
 			}
+			
+			return true;
+			
 		} catch (FileNotFoundException e) {
 			_log.error(e.getClass() + ": " + e.getMessage());
 		} catch (Exception e) {
@@ -336,6 +349,8 @@ public class SitePageLinkCrawler {
 			
 			printWriter.close();
 		}
+		
+		return false;
 	}
 	
 	private boolean includeLink(Element link) {
