@@ -60,7 +60,7 @@ public class SitePageLinkCrawler {
 		return crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPages, user, group, layoutCrawler, layouts, true);
 	}
 
-	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String emailAddressEnc, String passwordEnc, String cookieDomain, String outputFolder) {
+	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String loginIdEnc, String passwordEnc, String cookieDomain, String outputFolder) {
 		_log.info("starting crawlPages synchronous");
 		
 		long companyId = Long.valueOf(companyIdString);
@@ -74,7 +74,7 @@ public class SitePageLinkCrawler {
 		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
 		_log.info("PrivateLayoutURLPrefix: " + privateLayoutUrlPrefix);
 		_log.info("EmailAddress: " + emailAddress);
-		_log.info("EmailAddressEnc: " + emailAddressEnc);
+		_log.info("LoginIdEnc: " + loginIdEnc);
 		_log.info("PasswordEnc: " + passwordEnc);
 		_log.info("CookieDomain: " + cookieDomain);
 		_log.info("OutputFolder: " + outputFolder);
@@ -105,7 +105,7 @@ public class SitePageLinkCrawler {
 			return;
 		}
 		
-		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, emailAddressEnc, passwordEnc, cookieDomain, user.getLocale());
+		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, loginIdEnc, passwordEnc, cookieDomain, user.getLocale());
 		
 		List<Layout> layouts = getPages(siteId, false);
 		
