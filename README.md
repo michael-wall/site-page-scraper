@@ -15,7 +15,7 @@
 - The syntax and arguments to call Gogo shell command are as follows:
 
 ```
-sitePageHTMLCrawler:crawlPages "[companyId]" "[siteId]" "[validateLinksOnPages]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[emailAddress]" "[emailAddressEnc]" "[passwordEnc]" "[cookieDomain]" "[outputBaseFolder]"
+sitePageHTMLCrawler:crawlPages "[companyId]" "[siteId]" "[validateLinksOnPages]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[emailAddress]" "[loginIdEnc]" "[passwordEnc]" "[cookieDomain]" "[outputBaseFolder]"
 ```
 
 - For example in Liferay PaaS (with HTTPS):
