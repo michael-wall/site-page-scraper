@@ -89,7 +89,7 @@ Setup Notes:
   - It runs asynchronously and when it completes it will send a Liferay notifcation to confirm it completed e.g. The Asynchronous Site Page Crawler has completed successfully for Site Guest. The output was saved to Site Page Crawler Outputs with ID 53421.
   - Go to Site Administration > Publishing > Site Page Crawler Outputs and find the record where the ID matches.
   - The output file can be downloaded from the link in the 'output' column.
-- **Note that the widget runs in the contect of the users session, so the user must remain logged in for the asynchronous Site Page Crawler process to be able to crawl pages that don't have Guest role View access.**
+- **Note that the widget runs in the context of the current users session, so the user must remain logged in for the asynchronous Site Page Crawler process to be able to crawl pages that don't have Guest role View access.**
 
 ## Sample Output ## 
 ```
@@ -147,8 +147,10 @@ lcp files download --prefix /siteExport/ --dest c:/temp
 - A link is considered valid when it returns a 200 HTTP Status Code.
 - The links on the Pages can be Absolute or Relative. Absolute links can be links to other websites but in that case they should be accessible to the server where the Gogo shell command is run from, and not require authentication.
 - The Jsoup API is used to extract all links contained within the <section ... id="content"> .... </section> from Liferays themes. This is done to exclude links from header and footer etc. Change this if needed to use with a custom Theme.
-- Some internal Liferay links are excluded from the output - see SitePageLinkCrawler.java, includeLink(Element link) method for more details. Update this method if needed. 
+- Some internal Liferay links are excluded from the output - see SitePageLinkCrawler.java, includeLink(Element link) method for more details. Update this method if needed.
+  - Anchor links to the current page, mailto:,  file://, and tel: links are ignored for example.
 - The order of the links in the output is based on the order they are extracted from the HTML by the Jsoup API.
+- Bear in mind that Content Pages may have different Experiences or Widget and Content Pages render different content based on the user accessing the page e.g. based on Widget Permissions etc.
 
 ## Site Page Crawler Widget Notes ##
 - Running the Site Page Crawler from the Site Page Crawler Widget triggers the Site Page Crawler asynchronously.
@@ -157,7 +159,7 @@ lcp files download --prefix /siteExport/ --dest c:/temp
   - It can infer the hostname, port and protocol from the current request. This hostname is used as the cookieDomain and the hostname, port and protocol are used for generating public and private friendly URLs.
   - It infers the friendly URL syntax
   - It can copy the cookies from the current user and pass these to the crawler to make server side authenticated requests to retrieve the pages as the user.
-- **Note that the widget runs in the contect of the users session, so the user must remain logged in for the asynchronous Site Page Crawler process to be able to crawl pages that don't have Guest role View access.**
+- **Note that the widget runs in the context of the current users session, so the user must remain logged in for the asynchronous Site Page Crawler process to be able to crawl pages that don't have Guest role View access.**
 
 ## Warning ##
 - Crawling a Site with for example 1,000 pages where each page has an average of 10 crawlable links will trigger 10,000 page requests in the system if validateLinksOnPages is set to true.
