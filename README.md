@@ -8,7 +8,7 @@
 ## Usage ##
 - The tool can be run 2 ways:
   - Using a custom Gogo Shell Command which saves the output report on the Liferay server to be downloaded from the Liferay server. Using this approach, the account used MUST be a non-SSO account.
-  - Using the Site Page Crawler Widget which uploads the output report to a custom Liferay Objects entity to be easily download from within Liferay. Setup is required before the Widget can be used. See 'Site Page Crawler Widget Setup' section. Using this approach, the logged in user can be a SSO user or a non-SSO user.
+  - Using the Site Page Crawler Widget which uploads the output report to a custom Liferay Objects entity to be easily downloaded from within Liferay. Setup is required before the Widget can be used. See 'Site Page Crawler Widget Setup' section. Using this approach, the logged in user can be a SSO user or a non-SSO user.
 
 ## Custom Gogo Shell Command Usage ##
 - Requires com.mw.site.crawler-1.0.0.jar module to be deployed.
