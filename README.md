@@ -7,8 +7,8 @@
 
 ## Usage ##
 - The tool can be run 2 ways:
-  - Using a custom Gogo Shell Command which saves the output report on the Liferay server to be downloaded from the Liferay server.
-  - Using the Site Page Crawler Widget which uploads the output report to a custom Liferay Objects entity to be easily download from within Liferay. Setup is required before the Widget can be used. See 'Site Page Crawler Widget Setup' section.
+  - Using a custom Gogo Shell Command which saves the output report on the Liferay server to be downloaded from the Liferay server. Using this approach, the account used MUST be a non-SSO account.
+  - Using the Site Page Crawler Widget which uploads the output report to a custom Liferay Objects entity to be easily download from within Liferay. Setup is required before the Widget can be used. See 'Site Page Crawler Widget Setup' section. Using this approach, the logged in user can be a SSO user or a non-SSO user.
 
 ## Custom Gogo Shell Command Usage ##
 - Requires com.mw.site.crawler-1.0.0.jar module to be deployed.
@@ -48,7 +48,7 @@ Arguments:
 - **outputFolder**: The folder that the output file should be written to. In Liferay PaaS this can be the Liferay service's persistent storage directory i.e. "/mnt/persistent-storage/".
 
 ## Custom Gogo Shell Command > Crawler User Account ##
-- The module is designed to use a non-SSO enabled account to perform the crawling. The account used must have access to all pages in the target Site.
+- The custom Gogo Shell Command MUST use a non-SSO enabled account to perform the crawling. The account used must have access to all pages in the target Site.
 - The Instance Settings > User Authentication > 'Allow users to automatically log?' setting must be enabled while the tool is being setup and used. The setting can be disabled afterwards if not required. 
 - If necessary, create a Public page and add the 'Sign In' widget. This isn't necessary for the crawler to work but may be required to successfully login as the non-SSO user in a SSO enabled environment during setup. This page can be deleted once the encrypred credentials have been extracted. 
 - To get the encrypted loginId and password values, perform a non-SSO login as the user in Chrome Incognito Mode with 'Remember Me' checked, then go to Dev Tools > Application > Storage > Cookies:
