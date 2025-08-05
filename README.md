@@ -11,7 +11,7 @@
   - Using a custom Gogo Shell Command which saves the output report on the Liferay server to be downloaded from the Liferay server. Using this approach, the account used MUST be a non-SSO account.
 
 ##  Site Page Crawler System Settings ##
-- Required for the 'Site Page Crawler Widget' and for the Custom Gogo Shell Command.
+- Required for both the Site Page Crawler Widget and for the Custom Gogo Shell Command.
 - Configure the Tool: Control Panel > System Settings > Content and Data > Site Page Crawler
   - **Output Folder**: The folder that the output file should be written to. In Liferay PaaS this can be the Liferay service's persistent storage directory i.e. "/mnt/persistent-storage/".
   - **Object Definition ERC**: The ERC of the Liferay Objects Definition where the Site Page Crawler output is saved. Default is CRAWLER_OUTPUT. Used by the Site Page Crawler Widget only.
