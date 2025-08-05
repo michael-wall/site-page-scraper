@@ -1,6 +1,5 @@
 ## Introduction ##
 - This tool can be used to export a list of Links on each Public and Private Page within a specific Liferay Site.
-- This version only checks links within the Web Content Display widget, on Content Pages and Widget Pages.
 - Optionally the Links can be checked to ensure that they are valid.
 - The output is written to a single .txt file for example sitePageLinks_LinkTest_en_US_1748505842146.txt
 - The module exposes a single custom Gogo shell command: sitePageLinkCrawler:crawlPages
