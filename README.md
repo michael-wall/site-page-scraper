@@ -15,6 +15,8 @@
 - Configure the Tool: Control Panel > System Settings > Content and Data > Site Page Crawler
   - **Output Folder**: The folder that the output file should be written to. In Liferay PaaS this can be the Liferay service's persistent storage directory i.e. "/mnt/persistent-storage/".
   - **Object Definition ERC**: The ERC of the Liferay Objects Definition where the Site Page Crawler output is saved. Default is CRAWLER_OUTPUT. Used by the Site Page Crawler Widget only.
+  - **Page Body Selector**: CSS Selector to identify the Page Body. Default is section#content. This is used to exclude the page header and page footer when looking for links on a page.
+  - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
   - **Crawl Public Pages**: Whether to crawl public pages. Default is true.
   - **Crawl Private Pages**: Whether to crawl private pages. Default is true.
   - **Crawl Hidden Pages**: Whether to crawl hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
