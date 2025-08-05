@@ -75,11 +75,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		if (_log.isInfoEnabled()) _log.info("Activating...");		
 		
 		_sitePageCrawlerConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerConfiguration.class, properties);
-		
-		_log.info("outputFolder: " + _sitePageCrawlerConfiguration.outputFolder());
-		
-		_log.info("validateLinksOnPages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());
-		
+
 		_log.info("objectDefinitionERC: " + _sitePageCrawlerConfiguration.objectDefinitionERC());
 	}		
 	
@@ -112,7 +108,6 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		String privateLayoutUrlPrefix = relativeUrlPrefix + privatePrefix + siteFriendlyUrl;
 		
 		String cookieDomain = themeDisplay.getServerName();
-		String outputFolder = _sitePageCrawlerConfiguration.outputFolder();
 		
 		LayoutCrawler layoutCrawler = new LayoutCrawler(publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, themeDisplay.getUser());
 		
@@ -137,7 +132,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            try {
 		            	_log.info("Background Crawler Started for Site " + siteName + " for " + user.getFullName());
 		            	
-		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPage(companyId, group, validateLinksOnPages, relativeUrlPrefix, user, outputFolder, layoutCrawler, layouts);
+		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPage(companyId, group, relativeUrlPrefix, user, layoutCrawler, layouts);
 		            		            		
 		            	ObjectEntry objectEntry = null;
 		            	String objectDefinitionLabel = null;
@@ -165,7 +160,6 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            			objectEntryFields.put("site", siteName);
 		            			objectEntryFields.put("locale", "" + locale); 
 		            			objectEntryFields.put("output", fileEntry.getFileEntryId());
-		            			objectEntryFields.put("validateLinksOnPages", validateLinksOnPages); 
 		            			objectEntryFields.put("crawledPages", responseTO.getCrawledPages()); 
 		            			objectEntryFields.put("created", new Date()); 
 		            	        

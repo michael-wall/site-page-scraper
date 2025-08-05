@@ -1,6 +1,7 @@
 package com.mw.site.crawler;
 
 
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -13,6 +14,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
 import com.mw.site.crawler.model.LinkTO;
 import com.mw.site.crawler.model.PageTO;
 import com.mw.site.crawler.model.ResponseTO;
@@ -38,6 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 		immediate = true,
 		property = {"osgi.command.function=crawlPages", "osgi.command.scope=sitePageLinkCrawler"},
+		configurationPid = SitePageCrawlerConfiguration.PID,
 		service = SitePageLinkCrawler.class
 	)
 public class SitePageLinkCrawler {
@@ -46,30 +49,44 @@ public class SitePageLinkCrawler {
 	@Modified
 	protected void activate(Map<String, Object> properties) {
 		if (_log.isInfoEnabled()) _log.info("Activating...");
+		
+		_sitePageCrawlerConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerConfiguration.class, properties);
+		
+		_log.info("outputFolder: " + _sitePageCrawlerConfiguration.outputFolder());
+		
+		_log.info("objectDefinitionERC: " + _sitePageCrawlerConfiguration.objectDefinitionERC());
+		
+		_log.info("pageBodySelector: " + _sitePageCrawlerConfiguration.pageBodySelector());
+		
+		_log.info("webContentDisplayWidgetLinksOnly: " + _sitePageCrawlerConfiguration.webContentDisplayWidgetLinksOnly());
+		
+		_log.info("crawlPublicPages: " + _sitePageCrawlerConfiguration.crawlPublicPages());
+		
+		_log.info("crawlPrivatePages: " + _sitePageCrawlerConfiguration.crawlPrivatePages());
+		
+		_log.info("crawlHiddenPages: " + _sitePageCrawlerConfiguration.crawlHiddenPages());
+		
+		_log.info("validateLinksOnPages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());
 	}
 	
-	public ResponseTO crawlPage(long companyId, Group group, boolean validateLinksOnPages, String relativeUrlPrefix, User user, String outputFolder, LayoutCrawler layoutCrawler, List<Layout> layouts) {
+	public ResponseTO crawlPage(long companyId, Group group, String relativeUrlPrefix, User user, LayoutCrawler layoutCrawler, List<Layout> layouts) {
 		_log.info("starting crawlPages asynchronous");
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("GroupId: " + group.getGroupId());
-		_log.info("validateLinksOnPages: " + validateLinksOnPages);
 		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
-		_log.info("OutputFolder: " + outputFolder);
 		
-		return crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPages, user, group, layoutCrawler, layouts, true);
+		return crawlPages(relativeUrlPrefix, user, group, layoutCrawler, layouts, true);
 	}
 
-	public void crawlPages(String companyIdString, String siteIdString, String validateLinksOnPages, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String loginIdEnc, String passwordEnc, String cookieDomain, String outputFolder) {
+	public void crawlPages(String companyIdString, String siteIdString, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String loginIdEnc, String passwordEnc, String cookieDomain) {
 		_log.info("starting crawlPages synchronous");
 		
 		long companyId = Long.valueOf(companyIdString);
 		long siteId = Long.valueOf(siteIdString);
-		boolean validateLinksOnPagesBoolean = Boolean.valueOf(validateLinksOnPages);
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("SiteId: " + siteId);
-		_log.info("validateLinksOnPagesBoolean: " + validateLinksOnPagesBoolean);
 		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
 		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
 		_log.info("PrivateLayoutURLPrefix: " + privateLayoutUrlPrefix);
@@ -77,7 +94,6 @@ public class SitePageLinkCrawler {
 		_log.info("LoginIdEnc: " + loginIdEnc);
 		_log.info("PasswordEnc: " + passwordEnc);
 		_log.info("CookieDomain: " + cookieDomain);
-		_log.info("OutputFolder: " + outputFolder);
 		
 		Company company = companyLocalService.fetchCompany(companyId);
 		
@@ -109,37 +125,43 @@ public class SitePageLinkCrawler {
 		
 		List<Layout> layouts = getPages(siteId, false);
 		
-		crawlPages(relativeUrlPrefix, outputFolder, validateLinksOnPagesBoolean, user, group, layoutCrawler, layouts, false);
+		crawlPages(relativeUrlPrefix, user, group, layoutCrawler, layouts, false);
 	}
 	
 	public List<Layout> getPages(long groupId, boolean asynchronous) {
-		
-		List<Layout> publicLayouts = layoutLocalService.getLayouts(groupId, false);
-		List<Layout> privateLayouts = layoutLocalService.getLayouts(groupId, true);
-		
-		log("Public Page Count: " + publicLayouts.size(), asynchronous);
-		log("Private Page Count: " + privateLayouts.size(), asynchronous);
-		
 		List<Layout> layouts = new ArrayList<Layout>();
+
+		if (_sitePageCrawlerConfiguration.crawlPublicPages()) {
+			List<Layout> publicLayouts = layoutLocalService.getLayouts(groupId, false);	
+			
+			log("Public Page Count: " + publicLayouts.size(), asynchronous);
+			
+			layouts.addAll(publicLayouts);
+		}
 		
-		layouts.addAll(publicLayouts);
-		layouts.addAll(privateLayouts);		
-		
+		if (_sitePageCrawlerConfiguration.crawlPrivatePages()) {
+			List<Layout> privateLayouts = layoutLocalService.getLayouts(groupId, true);
+			
+			log("Private Page Count: " + privateLayouts.size(), asynchronous);
+			
+			layouts.addAll(privateLayouts);
+		}
+
 		return layouts;
 	}
 
-	private ResponseTO crawlPages(String relativeUrlPrefix, String outputFolder,
-			boolean validateLinksOnPagesBoolean, User user, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts, boolean asynchronous) {
+	private ResponseTO crawlPages(String relativeUrlPrefix, User user, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts, boolean asynchronous) {
 		
 		try {
 			boolean hasLayouts = false;
+			long pageBodySelectorNotFoundCount = 0;
 			
 			if (!layouts.isEmpty()) hasLayouts = true;
 					
 			List<PageTO> pageTOs = new ArrayList<PageTO>();
 			if (layoutCrawler != null) {
 				for (Layout layout: layouts) {
-					if (pageTOs.size() % 50 == 0) {
+					if (!pageTOs.isEmpty() && pageTOs.size() % 50 == 0) { // Show progress...
 						if (asynchronous) {
 							log("Asynchronous Site Page Crawler still running in Site " + group.getName(user.getLocale()) + " for " + user.getFullName(), asynchronous);
 						} else {
@@ -168,18 +190,24 @@ public class SitePageLinkCrawler {
 						Document htmlDocument = Jsoup.parse(pageHtml.toString());
 
 						// <section id="content"> or similar...
-						Element body = htmlDocument.selectFirst("section#content"); // Ensure this is valid if using a custom theme
+						Element body = htmlDocument.selectFirst(_sitePageCrawlerConfiguration.pageBodySelector());
 
 						if (Validator.isNull(body)) {
 							_log.info(pageTO.getName() + ": element body is null.");
+							
+							pageBodySelectorNotFoundCount++;
 						} else {
-							// <div class="journal-content-article " .....
-							webContentArticles = body.select("div.journal-content-article").asList();
-						}
-						
-						// Get all links inside the WCM Articles
-						for (Element webContentArticle: webContentArticles) {
-							links.addAll(webContentArticle.select("a").asList());
+							if (_sitePageCrawlerConfiguration.webContentDisplayWidgetLinksOnly()) {
+								// <div class="journal-content-article " .....
+								webContentArticles = body.select("div.journal-content-article").asList();
+								
+								// Get all links inside the WCM Articles
+								for (Element webContentArticle: webContentArticles) {
+									links.addAll(webContentArticle.select("a").asList());
+								}
+							} else { // All from the page body
+								links.addAll(body.select("a").asList());
+							}
 						}
 						
 						List<LinkTO> linkTOs = new ArrayList<LinkTO>();
@@ -194,7 +222,7 @@ public class SitePageLinkCrawler {
 									String label = link.text();
 									String[] linkStatus = {"", ""};
 									
-									if (validateLinksOnPagesBoolean) {
+									if (_sitePageCrawlerConfiguration.validateLinksOnPages()) {
 										linkStatus = layoutCrawler.validateLink(href, relativeUrlPrefix, user.getLocale());
 										
 										if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
@@ -209,7 +237,7 @@ public class SitePageLinkCrawler {
 							}					
 						}
 						
-						if (validateLinksOnPagesBoolean) {
+						if (_sitePageCrawlerConfiguration.validateLinksOnPages()) {
 							pageTO.setValidLinkCount(validLinkCount);
 							pageTO.setInvalidLinkCount(invalidLinkCount);	
 						}
@@ -227,7 +255,7 @@ public class SitePageLinkCrawler {
 				if (hasLayouts) {
 					message = "No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.";
 					
-					log(message, asynchronous);		
+					log(message, asynchronous);
 				} else {
 					message = "No Pages found. Ensure that the Crawler settings were correct.";
 					
@@ -235,9 +263,17 @@ public class SitePageLinkCrawler {
 				}
 				
 				return new ResponseTO(false, null, message, 0);
+			} else if (pageBodySelectorNotFoundCount > 0 && pageBodySelectorNotFoundCount >= pageTOs.size()) {
+				String message = "";
+				
+				message = "No Pages crawled - check that the Crawler settings were correct, in particular the Page Body Selector value.";
+				
+				log(message, asynchronous);
+				
+				return new ResponseTO(false, null, message, 0);
 			}
 			
-			File outputFolderFile = new File(outputFolder);
+			File outputFolderFile = new File(_sitePageCrawlerConfiguration.outputFolder());
 			if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
 			
 			String fileName = "sitePageLinks_" + group.getName(user.getLocale()) + "_" + user.getLocale().toString() + "_" + System.currentTimeMillis() + ".txt";
@@ -245,7 +281,7 @@ public class SitePageLinkCrawler {
 
 			Path normalizedOutputFilePath = Paths.get(outputFilePath).normalize();
 			
-			boolean fileGenerated = outputToTxtFile(validateLinksOnPagesBoolean, pageTOs, normalizedOutputFilePath.toString());
+			boolean fileGenerated = outputToTxtFile(group.getName(user.getLocale()), user.getLocale().toString(), pageTOs, normalizedOutputFilePath.toString());
 			
 			if (fileGenerated) {
 				log("Done, Output written to: " + normalizedOutputFilePath, asynchronous);
@@ -265,7 +301,10 @@ public class SitePageLinkCrawler {
 		if (Validator.isNull(layout)) return false;
 		if (Validator.isNull(layout.getType())) return false;
 		
-		if (layout.isHidden()) return false;
+		if (!_sitePageCrawlerConfiguration.crawlHiddenPages()) {
+			if (layout.isHidden()) return false;	
+		}
+		
 		if (layout.isDraft() || layout.isDraftLayout()) return false;
 		if (!layout.isApproved()) return false;
 		if (layout.isInactive() || layout.isIncomplete()) return false;
@@ -278,13 +317,23 @@ public class SitePageLinkCrawler {
 		return false;
 	}
 	
-	private boolean outputToTxtFile(boolean validateLinksOnPagesBoolean, List<PageTO> pageTOs, String outputFilePath) {
+	private boolean outputToTxtFile(String siteName, String localeString, List<PageTO> pageTOs, String outputFilePath) {
 		PrintWriter printWriter = null;
 		
 		try {
 			printWriter = new PrintWriter(outputFilePath);
 			
 			long pageCount = 1;
+			
+			printWriter.println("Site Name: " + siteName);
+			printWriter.println("Locale: " + localeString);
+			printWriter.println("Crawl Public Pages: " + _sitePageCrawlerConfiguration.crawlPublicPages());
+			printWriter.println("Crawl Private Pages: " + _sitePageCrawlerConfiguration.crawlPrivatePages());
+			printWriter.println("Crawl Hidden Pages: " + _sitePageCrawlerConfiguration.crawlHiddenPages());
+			printWriter.println("Validate Links On Pages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());			
+			printWriter.println("");
+			printWriter.println("Page Count: " + pageTOs.size());
+			printWriter.println("");
 			
 			for (PageTO pageTO: pageTOs) {
 				boolean pageHasLinks = false;
@@ -303,7 +352,7 @@ public class SitePageLinkCrawler {
 					printWriter.println("[" + pageCount + "] Page Link Count: 0");
 				}				
 				
-				if (validateLinksOnPagesBoolean && pageHasLinks) {
+				if (_sitePageCrawlerConfiguration.validateLinksOnPages() && pageHasLinks) {
 					printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
 					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
 				}
@@ -316,7 +365,7 @@ public class SitePageLinkCrawler {
 					for (LinkTO linkTO: linkTOs) {
 						printWriter.println("Link Label: " + linkTO.getLabel());
 						printWriter.println("Link URL: " + linkTO.getHref());
-						if (validateLinksOnPagesBoolean) {
+						if (_sitePageCrawlerConfiguration.validateLinksOnPages()) {
 							if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
 								printWriter.println("Link appears to be valid.");
 							} else {
@@ -399,6 +448,8 @@ public class SitePageLinkCrawler {
 	
     @Reference
     private Portal _portal;
+    
+	private volatile SitePageCrawlerConfiguration _sitePageCrawlerConfiguration;
 	
 	private static final Log _log = LogFactoryUtil.getLog(SitePageLinkCrawler.class);	
 }
