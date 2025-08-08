@@ -31,6 +31,9 @@ public interface SitePageCrawlerConfiguration {
 	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.crawlHiddenPages.name", description = "field.crawlHiddenPages.desc")
 	public boolean crawlHiddenPages();
 	
+	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.checkPageGuestView.name", description = "field.checkPageGuestView.desc")
+	public boolean checkPageGuestView();
+	
 	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.validateLinksOnPages.name", description = "field.validateLinksOnPages.desc")
 	public boolean validateLinksOnPages();
 }

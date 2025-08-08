@@ -88,7 +88,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 			
 			return;
 		}
-		
+
 		HttpServletRequest httpRequest = PortalUtil.getHttpServletRequest(actionRequest);
 		
 		long companyId = themeDisplay.getCompanyId();

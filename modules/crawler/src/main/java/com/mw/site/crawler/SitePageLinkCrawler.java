@@ -2,15 +2,22 @@ package com.mw.site.crawler;
 
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -65,6 +72,8 @@ public class SitePageLinkCrawler {
 		_log.info("crawlPrivatePages: " + _sitePageCrawlerConfiguration.crawlPrivatePages());
 		
 		_log.info("crawlHiddenPages: " + _sitePageCrawlerConfiguration.crawlHiddenPages());
+		
+		_log.info("checkPageGuestView: " + _sitePageCrawlerConfiguration.checkPageGuestView());
 		
 		_log.info("validateLinksOnPages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());
 	}
@@ -152,6 +161,8 @@ public class SitePageLinkCrawler {
 
 	private ResponseTO crawlPages(String relativeUrlPrefix, User user, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts, boolean asynchronous) {
 		
+		long guestRoleId = getGuestRoleId(user.getCompanyId());
+		
 		try {
 			boolean hasLayouts = false;
 			long pageBodySelectorNotFoundCount = 0;
@@ -169,12 +180,18 @@ public class SitePageLinkCrawler {
 						}
 					}
 					
-					if (!isCrawlableLayout(layout)) continue; // Skip if not a content page or widget page...
+					if (!isCrawlableLayout(layout)) continue;
 					
 					PageTO pageTO = new PageTO();
 					
 					pageTO.setName(layout.getName(user.getLocale()));
 					pageTO.setPrivatePage(layout.isPrivateLayout());
+					
+					if (_sitePageCrawlerConfiguration.checkPageGuestView()) {
+						int hasGuestViewPermission = hasGuestViewPermission(guestRoleId, layout);
+					
+						pageTO.setGuestViewPermissionEnabled(hasGuestViewPermission);
+					}
 					
 					List<Element> webContentArticles = new ArrayList<Element>();
 					List<Element> links = new ArrayList<Element>();
@@ -327,10 +344,11 @@ public class SitePageLinkCrawler {
 			
 			printWriter.println("Site Name: " + siteName);
 			printWriter.println("Locale: " + localeString);
-			printWriter.println("Crawl Public Pages: " + _sitePageCrawlerConfiguration.crawlPublicPages());
-			printWriter.println("Crawl Private Pages: " + _sitePageCrawlerConfiguration.crawlPrivatePages());
-			printWriter.println("Crawl Hidden Pages: " + _sitePageCrawlerConfiguration.crawlHiddenPages());
-			printWriter.println("Validate Links On Pages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());			
+			printWriter.println("Crawl Public Pages: " + getLabel(_sitePageCrawlerConfiguration.crawlPublicPages()));
+			printWriter.println("Crawl Private Pages: " + getLabel(_sitePageCrawlerConfiguration.crawlPrivatePages()));
+			printWriter.println("Crawl Hidden Pages: " + getLabel(_sitePageCrawlerConfiguration.crawlHiddenPages()));
+			printWriter.println("Check Page Guest View: " + getLabel(_sitePageCrawlerConfiguration.checkPageGuestView()));
+			printWriter.println("Validate Links On Pages: " + getLabel(_sitePageCrawlerConfiguration.validateLinksOnPages()));			
 			printWriter.println("");
 			printWriter.println("Page Count: " + pageTOs.size());
 			printWriter.println("");
@@ -344,8 +362,12 @@ public class SitePageLinkCrawler {
 				printWriter.println("**********************************************************************");
 				printWriter.println("[" + pageCount + "] Page Name: " + pageTO.getName());
 				printWriter.println("[" + pageCount + "] Page URL: " + pageTO.getUrl());
-				printWriter.println("[" + pageCount + "] Private Page: " + pageTO.isPrivatePage());
-			
+				printWriter.println("[" + pageCount + "] Private Page: " + getLabel(pageTO.isPrivatePage()));
+				
+				if (_sitePageCrawlerConfiguration.checkPageGuestView()) {
+					printWriter.println("[" + pageCount + "] Page Guest View Permission Enabled: " + getLabel(pageTO.getGuestViewPermissionEnabled()));
+				}
+				
 				if (pageHasLinks) {
 					printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
 				} else {
@@ -422,8 +444,61 @@ public class SitePageLinkCrawler {
 		if (href.toLowerCase().startsWith("#")) return false; // Skip if anchor link to current page...
 		
 		if (href.toLowerCase().indexOf("/~/control_panel/manage".toLowerCase()) >= 0) return false;
+		
+		// Prevent infinite loop in case the widget is added to a real page...
+		if (href.toLowerCase().indexOf("p_p_id=com_mw_crawler_web_CrawlerPortlet".toLowerCase()) >= 0) return false;
 
 		return true;
+	}
+	
+	private long getGuestRoleId(long companyId) {
+		Role role = roleLocalService.fetchRole(companyId, RoleConstants.GUEST);
+		
+		if (Validator.isNotNull(role)) return role.getRoleId();
+		
+		return -1;
+	}
+	
+	private String getLabel(int value) {
+		if (value == -1) return "Unknown";
+		if (value == 0) return "No";
+		if (value == 1) return "Yes";
+		
+		return "Unknown";
+ 	}
+	
+	private String getLabel(boolean value) {
+		if (value) return "Yes";
+		
+		return "No";
+ 	}
+	
+	private int hasGuestViewPermission(long guestRoleId, Layout layout) {
+		if (guestRoleId == -1 || Validator.isNull(layout)) return -1;
+		
+		String resourceName = Layout.class.getName();
+		String primKey = String.valueOf(layout.getPlid());
+
+		try {
+			boolean hasGuestViewPermission = resourcePermissionLocalService.hasResourcePermission(
+			    layout.getCompanyId(),
+			    resourceName,
+			    ResourceConstants.SCOPE_INDIVIDUAL,
+			    primKey,
+			    guestRoleId,
+			    ActionKeys.VIEW
+			);
+			
+			if (hasGuestViewPermission) {
+				return 1;
+			} else {
+				return 0;
+			}
+		} catch (PortalException e) {
+			_log.error(e.getClass() + ": " + e.getMessage(), e);
+		}
+		
+		return -1;
 	}
 	
 	private void log(String output, boolean asynchronous) {
@@ -445,6 +520,12 @@ public class SitePageLinkCrawler {
 	
 	@Reference
 	private UserLocalService userLocalService;
+
+	@Reference
+	private RoleLocalService roleLocalService;
+	
+	@Reference
+	private ResourcePermissionLocalService resourcePermissionLocalService;
 	
     @Reference
     private Portal _portal;
