@@ -19,6 +19,7 @@
   - **Crawl Private Pages**: Whether to crawl private pages. Default is true.
   - **Crawl Hidden Pages**: Whether to crawl hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
   - **Check Page Guest Role View Permission**: Check whether the Guest Role has View permission for the page.
+  - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
   - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
 
 ## Site Page Crawler Widget Setup ##
