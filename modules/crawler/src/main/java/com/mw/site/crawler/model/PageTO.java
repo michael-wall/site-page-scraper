@@ -11,7 +11,7 @@ public class PageTO implements Serializable {
 	private boolean privatePage = false;
 	private long validLinkCount = 0;
 	private long invalidLinkCount = 0;
-	private int guestViewPermissionEnabled = -1;
+	private int guestRoleViewPermissionEnabled = -1;
 	
 	private List<LinkTO> links;
 
@@ -63,12 +63,12 @@ public class PageTO implements Serializable {
 		this.links = links;
 	}
 
-	public int getGuestViewPermissionEnabled() {
-		return guestViewPermissionEnabled;
+	public int getGuestRoleViewPermissionEnabled() {
+		return guestRoleViewPermissionEnabled;
 	}
 
-	public void setGuestViewPermissionEnabled(int guestViewPermissionEnabled) {
-		this.guestViewPermissionEnabled = guestViewPermissionEnabled;
+	public void setGuestRoleViewPermissionEnabled(int guestRoleViewPermissionEnabled) {
+		this.guestRoleViewPermissionEnabled = guestRoleViewPermissionEnabled;
 	}
 
 	public PageTO() {

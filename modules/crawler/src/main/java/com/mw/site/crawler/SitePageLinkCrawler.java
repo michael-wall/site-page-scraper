@@ -73,7 +73,7 @@ public class SitePageLinkCrawler {
 		
 		_log.info("crawlHiddenPages: " + _sitePageCrawlerConfiguration.crawlHiddenPages());
 		
-		_log.info("checkPageGuestView: " + _sitePageCrawlerConfiguration.checkPageGuestView());
+		_log.info("checkPageGuestRoleViewPermission: " + _sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission());
 		
 		_log.info("validateLinksOnPages: " + _sitePageCrawlerConfiguration.validateLinksOnPages());
 	}
@@ -187,10 +187,10 @@ public class SitePageLinkCrawler {
 					pageTO.setName(layout.getName(user.getLocale()));
 					pageTO.setPrivatePage(layout.isPrivateLayout());
 					
-					if (_sitePageCrawlerConfiguration.checkPageGuestView()) {
+					if (_sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission()) {
 						int hasGuestViewPermission = hasGuestViewPermission(guestRoleId, layout);
 					
-						pageTO.setGuestViewPermissionEnabled(hasGuestViewPermission);
+						pageTO.setGuestRoleViewPermissionEnabled(hasGuestViewPermission);
 					}
 					
 					List<Element> webContentArticles = new ArrayList<Element>();
@@ -347,7 +347,8 @@ public class SitePageLinkCrawler {
 			printWriter.println("Crawl Public Pages: " + getLabel(_sitePageCrawlerConfiguration.crawlPublicPages()));
 			printWriter.println("Crawl Private Pages: " + getLabel(_sitePageCrawlerConfiguration.crawlPrivatePages()));
 			printWriter.println("Crawl Hidden Pages: " + getLabel(_sitePageCrawlerConfiguration.crawlHiddenPages()));
-			printWriter.println("Check Page Guest View: " + getLabel(_sitePageCrawlerConfiguration.checkPageGuestView()));
+			printWriter.println("Check Page Guest Role View Permission: " + getLabel(_sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission()));
+			printWriter.println("Web Content Display Widget Links Only: " + getLabel(_sitePageCrawlerConfiguration.webContentDisplayWidgetLinksOnly()));
 			printWriter.println("Validate Links On Pages: " + getLabel(_sitePageCrawlerConfiguration.validateLinksOnPages()));			
 			printWriter.println("");
 			printWriter.println("Page Count: " + pageTOs.size());
@@ -364,8 +365,8 @@ public class SitePageLinkCrawler {
 				printWriter.println("[" + pageCount + "] Page URL: " + pageTO.getUrl());
 				printWriter.println("[" + pageCount + "] Private Page: " + getLabel(pageTO.isPrivatePage()));
 				
-				if (_sitePageCrawlerConfiguration.checkPageGuestView()) {
-					printWriter.println("[" + pageCount + "] Page Guest View Permission Enabled: " + getLabel(pageTO.getGuestViewPermissionEnabled()));
+				if (_sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission()) {
+					printWriter.println("[" + pageCount + "] Page Guest Role View Permission Enabled: " + getLabel(pageTO.getGuestRoleViewPermissionEnabled()));
 				}
 				
 				if (pageHasLinks) {
