@@ -63,7 +63,7 @@ Locale: en_US
 Crawl Public Pages: Yes
 Crawl Private Pages: Yes
 Crawl Hidden Pages: Yes
-Check Page Guest View: Yes
+Check Page Guest Role View Permission: Yes
 Validate Links On Pages: Yes
 
 Page Count: 14
