@@ -19,7 +19,8 @@
   - **Crawl Public Pages**: Whether to crawl public pages. Default is true.
   - **Crawl Private Pages**: Whether to crawl private pages. Default is true.
   - **Crawl Hidden Pages**: Whether to crawl hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
-   - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
+  - **Check Page Guest View**: Check whether the Guest Role has View permission for the page.
+  - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
 
 ## Site Page Crawler Widget Setup ##
 - Requires com.mw.site.crawler-1.0.0.jar AND com.mw.site.crawler.web-1.0.0.jar modules to be deployed.
@@ -58,10 +59,21 @@ Setup Notes:
 
 ## Sample Output ## 
 ```
+Site Name: LinkTest
+Locale: en_US
+Crawl Public Pages: Yes
+Crawl Private Pages: Yes
+Crawl Hidden Pages: Yes
+Check Page Guest View: Yes
+Validate Links On Pages: Yes
+
+Page Count: 14
+
 **********************************************************************
 [1] Page Name: Public Test 1
 [1] Page URL: http://localhost:8080/web/linktest/public-test-1
-[1] Private Page: false
+[1] Private Page: No
+[1] Page Guest View Permission Enabled: Yes
 [1] Page Link Count: 4
 [1] Valid Link Count: 3
 [1] Invalid Link Count: 1
@@ -86,7 +98,8 @@ Link not verified: 404
 **********************************************************************
 [2] Page Name: Public Test 2
 [2] Page URL: http://localhost:8080/web/linktest/public-test-2
-[2] Private Page: false
+[2] Private Page: No
+[1] Page Guest View Permission Enabled: No
 [2] Page Link Count: 0
 **********************************************************************
 
