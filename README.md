@@ -10,6 +10,8 @@
 
 ##  Site Page Crawler System Settings ##
 - Required for both the Site Page Crawler Widget and for the Custom Gogo Shell Command.
+  - In the case of the Site Page Crawler Widget the boolean values are set as the defaults in the GUI and the user can choose to override any of the values before clicking 'Run Site Page Crawler'.
+  - In the case of the Custom Gogo Shell Command the values from the System Settings are applied.
 - Configure the Tool: Control Panel > System Settings > Content and Data > Site Page Crawler
   - **Output Folder**: The folder that the output file should be written to. In Liferay PaaS this can be the Liferay service's persistent storage directory i.e. "/mnt/persistent-storage/".
   - **Object Definition ERC**: The ERC of the Liferay Objects Definition where the Site Page Crawler output is saved. Default is CRAWLER_OUTPUT. Used by the Site Page Crawler Widget only.
@@ -17,9 +19,8 @@
   - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
   - **Crawl Public Pages**: Whether to crawl public pages. Default is true.
   - **Crawl Private Pages**: Whether to crawl private pages. Default is true.
-  - **Crawl Hidden Pages**: Whether to crawl hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
+  - **Include Hidden Pages**: Whether to include hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
   - **Check Page Guest Role View Permission**: Check whether the Guest Role has View permission for the page. Default is false.
-  - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
   - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
 
 ## Site Page Crawler Widget Setup ##
@@ -41,6 +42,8 @@ Setup Notes:
 
 ## Site Page Crawler Widget Usage ##
 - Within the Site to be crawled, go to Site > Site Menu > Site Builder > Site Page Crawler.
+- Override the default values if required
+  - For example if the default for 'Include Hidden Pages' is false and you wish to include hidden pages for this run then enable the corresponding checkbox.
 - Click 'Run Site Page Crawler'
   - It first checks if pages exist and returns a message e.g. The Asynchronous Site Page Crawler has been triggered at 11:19:29 UTC. You will receive a notification when it completes.
   - It runs asynchronously and when it completes it will send a Liferay notifcation to confirm it completed e.g. The Asynchronous Site Page Crawler has completed successfully for Site Guest. The output was saved to Site Page Crawler Outputs with ID 53421.
