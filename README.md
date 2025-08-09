@@ -64,11 +64,11 @@ Setup Notes:
 ```
 Site Name: LinkTest
 Locale: en_US
-Crawl Public Pages: Yes
-Crawl Private Pages: Yes
-Crawl Hidden Pages: Yes
-Check Page Guest Role View Permission: Yes
 Web Content Display Widget Links Only: Yes
+Include Public Pages: Yes
+Include Private Pages: Yes
+Include Hidden Pages: Yes
+Check Page Guest Role View Permission: Yes
 Validate Links On Pages: Yes
 
 Page Count: 14
@@ -77,6 +77,7 @@ Page Count: 14
 [1] Page Name: Public Test 1
 [1] Page URL: http://localhost:8080/web/linktest/public-test-1
 [1] Private Page: No
+[1] Hidden Page: No
 [1] Page Guest View Permission Enabled: Yes
 [1] Page Link Count: 4
 [1] Valid Link Count: 3
@@ -103,11 +104,15 @@ Link not verified: 404
 [2] Page Name: Public Test 2
 [2] Page URL: http://localhost:8080/web/linktest/public-test-2
 [2] Private Page: No
-[1] Page Guest View Permission Enabled: No
+[2] Hidden Page: No
+[2] Page Guest View Permission Enabled: No
 [2] Page Link Count: 0
 **********************************************************************
 
 No links found on the page.
+...
+...
+...
 ```
 
 ## General Notes ##
