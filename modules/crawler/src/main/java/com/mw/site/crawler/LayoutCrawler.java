@@ -6,6 +6,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.mw.site.crawler.config.ConfigTO;
 
 import java.net.URI;
 import java.util.Locale;
@@ -29,8 +30,10 @@ import org.apache.http.util.EntityUtils;
 
 public class LayoutCrawler {
 	
-    public LayoutCrawler(String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user) {
+    public LayoutCrawler(ConfigTO config, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user) {
 
+    	_config = config;
+    	
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
         _httpClient = httpClientBuilder.setUserAgent(_USER_AGENT).build();
@@ -41,8 +44,10 @@ public class LayoutCrawler {
         httpClientContext = _getHttpClientContext(httpRequest, cookieDomain, user.getLocale());    
     }	
 
-    public LayoutCrawler(String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
+    public LayoutCrawler(ConfigTO config, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
 
+    	_config = config;
+    	
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
         _httpClient = httpClientBuilder.setUserAgent(_USER_AGENT).build();
@@ -225,6 +230,8 @@ public class LayoutCrawler {
     private String _autoPasswordEnc;
     private String _autoUserIdEnc;
     private String _cookieDomain;
+    
+    private ConfigTO _config;
     
     private HttpClient _httpClient;
 

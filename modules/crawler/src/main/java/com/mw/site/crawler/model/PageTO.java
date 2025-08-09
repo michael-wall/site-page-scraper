@@ -9,6 +9,7 @@ public class PageTO implements Serializable {
 	private String name;
 	private String url;
 	private boolean privatePage = false;
+	private boolean hiddenPage = false;
 	private long validLinkCount = 0;
 	private long invalidLinkCount = 0;
 	private int guestRoleViewPermissionEnabled = -1;
@@ -37,6 +38,14 @@ public class PageTO implements Serializable {
 
 	public void setPrivatePage(boolean privatePage) {
 		this.privatePage = privatePage;
+	}
+
+	public boolean isHiddenPage() {
+		return hiddenPage;
+	}
+
+	public void setHiddenPage(boolean hiddenPage) {
+		this.hiddenPage = hiddenPage;
 	}
 
 	public long getValidLinkCount() {

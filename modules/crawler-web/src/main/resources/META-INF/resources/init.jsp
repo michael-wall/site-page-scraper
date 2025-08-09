@@ -6,5 +6,7 @@
 <%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 <%@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
+<%@ page import="com.mw.site.crawler.config.ConfigTO" %>
+
 <liferay-theme:defineObjects />
 <portlet:defineObjects />

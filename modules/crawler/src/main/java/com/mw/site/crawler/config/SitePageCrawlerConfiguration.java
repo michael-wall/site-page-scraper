@@ -22,14 +22,14 @@ public interface SitePageCrawlerConfiguration {
 	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.webContentDisplayWidgetLinksOnly.name", description = "field.webContentDisplayWidgetLinksOnly.desc")
 	public boolean webContentDisplayWidgetLinksOnly();
 
-	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.crawlPublicPages.name", description = "field.crawlPublicPages.desc")
-	public boolean crawlPublicPages();	
+	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.includePublicPages.name", description = "field.includePublicPages.desc")
+	public boolean includePublicPages();	
 	
-	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.crawlPrivatePages.name", description = "field.crawlPrivatePages.desc")
-	public boolean crawlPrivatePages();	
+	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.includePrivatePages.name", description = "field.includePrivatePages.desc")
+	public boolean includePrivatePages();	
 	
-	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.crawlHiddenPages.name", description = "field.crawlHiddenPages.desc")
-	public boolean crawlHiddenPages();
+	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.includeHiddenPages.name", description = "field.includeHiddenPages.desc")
+	public boolean includeHiddenPages();
 	
 	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.checkPageGuestRoleViewPermission.name", description = "field.checkPageGuestRoleViewPermission.desc")
 	public boolean checkPageGuestRoleViewPermission();

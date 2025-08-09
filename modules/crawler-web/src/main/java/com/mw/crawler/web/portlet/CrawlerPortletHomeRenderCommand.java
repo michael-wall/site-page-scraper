@@ -4,10 +4,11 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.mw.crawler.web.constants.CrawlerPortletKeys;
+import com.mw.site.crawler.SitePageLinkCrawler;
+import com.mw.site.crawler.config.ConfigTO;
 
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import javax.portlet.RenderResponse;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael Wall
@@ -45,17 +47,16 @@ public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
 		if (Validator.isNull(themeDisplay.getUser()) || themeDisplay.getUser().isGuestUser()) {
 			return "/noAccess.jsp";
 		}
-		
-		boolean sitePageCrawlerTriggered = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerTriggered", false);
-		String sitePageCrawlerStartTime = ParamUtil.getString(renderRequest, "sitePageCrawlerStartTime", null);
-		boolean sitePageCrawlerNoPagesFound = ParamUtil.getBoolean(renderRequest, "sitePageCrawlerNoPagesFound", false);
-		
-		renderRequest.setAttribute("sitePageCrawlerTriggered", sitePageCrawlerTriggered);
-		renderRequest.setAttribute("sitePageCrawlerStartTime", sitePageCrawlerStartTime);
-		renderRequest.setAttribute("sitePageCrawlerNoPagesFound", sitePageCrawlerNoPagesFound);
+
+		ConfigTO config = sitePageLinkCrawler.getDefaultConfiguration();
+
+		renderRequest.setAttribute("sitePageCrawlerConfig", config);
 		
 		return "/crawler.jsp";
 	}
+	
+	@Reference(unbind = "-")
+	private SitePageLinkCrawler sitePageLinkCrawler;	
 	
  	private static final Log _log = LogFactoryUtil.getLog(CrawlerPortletHomeRenderCommand.class);	
 }
