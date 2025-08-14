@@ -21,7 +21,7 @@
   - **Include Public Pages**: Whether to include public pages. Default is true. Will be overridden to true if 'Run as Guest User' is true.
   - **Include Private Pages**: Whether to include private pages. Default is true. Will be overridden to false if 'Run as Guest User' is true.
   - **Include Hidden Pages**: Whether to include hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
-  - **Check Page Guest Role View Permission**: Whether to check if the Guest Role has View permission on a public page. Default is false. Only applies to Public Pages.
+  - **Check Public Page Guest Role View Permission**: Whether to check if the Guest Role has View permission on a public page. Default is false. Only applies to Public Pages.
   - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
 
 ## Site Page Crawler Widget Setup ##
