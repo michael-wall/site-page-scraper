@@ -48,7 +48,7 @@ Arguments for crawlPagesAsUser:
 - **passwordEnc**: The encrypted password of the user. See 'Crawler User Account' section.
 - **cookieDomain**: The Cookie Domain for the credentials. See 'Crawler User Account' section.
 
-- Arguments for crawlPagesAsGuest:
+Arguments for crawlPagesAsGuest:
 - **companyId**: The companyId of the Virtual Instance that the Site resides in.
 - **siteId**: The siteId of the Site to be crawled - get this from Site Settings > Site Configuration.
 - **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com
