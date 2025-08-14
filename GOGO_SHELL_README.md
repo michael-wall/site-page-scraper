@@ -10,7 +10,8 @@
 
 ```
 sitePageHTMLCrawler:crawlPagesAsUser "[companyId]" "[siteId]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[emailAddress]" "[loginIdEnc]" "[passwordEnc]" "[cookieDomain]"
-
+```
+```
 sitePageHTMLCrawler:crawlPagesAsGuest "[companyId]" "[siteId]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[cookieDomain]"
 ```
 
@@ -18,7 +19,8 @@ sitePageHTMLCrawler:crawlPagesAsGuest "[companyId]" "[siteId]" "[relativeUrlPref
 
 ```
 sitePageLinkCrawler:crawlPagesAsUser "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwsitescraper-prd.lfr.cloud"
-
+```
+```
 sitePageLinkCrawler:crawlPagesAsGuest "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwsitescraper-prd.lfr.cloud/group/mw" "webserver-lctmwsitescraper-prd.lfr.cloud"
 ```
 
@@ -26,7 +28,8 @@ sitePageLinkCrawler:crawlPagesAsGuest "23990396268826" "32920" "https://webserve
 
 ```
 sitePageLinkCrawler:crawlPagesAsUser "20096" "49006" "http://localhost:8080" "http://localhost:8080/web/linktest" "http://localhost:8080/group/linktest" "test@liferay.com" "366b32764248576e783543736e55526e6e57707853773d3d" "3472704e536345712b73575a316c4a6c447a705365673d3d" "localhost"
-
+```
+```
 sitePageLinkCrawler:crawlPagesAsGuest "20096" "49006" "http://localhost:8080" "http://localhost:8080/web/linktest" "http://localhost:8080/group/linktest" "localhost"
 ```
 
