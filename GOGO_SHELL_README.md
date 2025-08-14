@@ -46,16 +46,16 @@ Arguments for crawlPagesAsUser:
 - **emailAddress**: The email address of the user to log in as. See 'Crawler User Account' section.
 - **loginIdEnc**: The encrypted login ID (email address or screenName) of the user. See 'Crawler User Account' section.
 - **passwordEnc**: The encrypted password of the user. See 'Crawler User Account' section.
-- **cookieDomain**: The Cookie Domain for the credentials. See 'Crawler User Account' section.
+- **cookieDomain**: The Cookie Domain for the ID, PASSWORD, REMEMBER_ME and GUEST_LANGUAGE_ID cookies. See 'Crawler User Account for crawlPagesAsUser' section.
 
 Arguments for crawlPagesAsGuest:
 - **companyId**: The companyId of the Virtual Instance that the Site resides in.
 - **siteId**: The siteId of the Site to be crawled - get this from Site Settings > Site Configuration.
-- **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com
-- **publicLayoutUrlPrefix**: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet
-- **cookieDomain**: The Cookie Domain for the credentials. See 'Crawler User Account' section.
+- **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com or http://localhost:8080
+- **publicLayoutUrlPrefix**: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet or http://localhost:8080/web/linktest
+- **cookieDomain**: The Cookie Domain to use when setting the GUEST_LANGUAGE_ID cookie for the Guest User. To get the value navigate to the Site and go to Dev Tools > Application > Storage > Cookies and get the 'Domain' value for the GUEST_LANGUAGE_ID cookie.
 
-## Site Page Crawler Custom Gogo Shell Command > Crawler User Account for crawlPagesAsUser ##
+## Crawler User Account for crawlPagesAsUser ##
 - The crawlPagesAsUser Custom Gogo Shell Command MUST use a non-SSO enabled account to perform the crawling. The account used must have access to all pages in the target Site.
 - The Instance Settings > User Authentication > 'Allow users to automatically log?' setting must be enabled while the tool is being setup and used. The setting can be disabled afterwards if not required. 
 - If necessary, create a Public page and add the 'Sign In' widget. This isn't necessary for the crawler to work but may be required to successfully login as the non-SSO user in a SSO enabled environment during setup. This page can be deleted once the encrypred credentials have been extracted. 
