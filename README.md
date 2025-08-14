@@ -67,51 +67,54 @@ Setup Notes:
 
 ## Sample Output ## 
 ```
+Trigger: Site Page Crawler Widget
 Site Name: LinkTest
 Locale: en_US
 Web Content Display Widget Links Only: Yes
 Run as Guest User: No
 Include Public Pages: Yes
-Include Private Pages: Yes
+Include Private Pages: No
 Include Hidden Pages: Yes
-Check Page Guest Role View Permission: Yes
+Check Public Page Guest Role View Permission: Yes
 Validate Links On Pages: Yes
 
-Page Count: 14
+Page Count: 7
 
 **********************************************************************
 [1] Page Name: Public Test 1
 [1] Page URL: http://localhost:8080/web/linktest/public-test-1
-[1] Private Page: No
+[1] Page Type: Public Page
 [1] Hidden Page: No
-[1] Page Guest View Permission Enabled: Yes
-[1] Page Link Count: 4
-[1] Valid Link Count: 3
-[1] Invalid Link Count: 1
+[1] Public Page Guest Role View Permission Enabled: Yes
+[1] Page Link Count: 18
+[1] Valid Link Count: 14
+[1] Invalid Link Count: 4
 **********************************************************************
 
-Link Label: Test 1
-Link URL: http://localhost:8080/group/linktest/test-3
-Link appears to be valid.
+[1-1] Link Label: Liferay
+[1-1] Link URL: https://www.liferay.com/
+[1-1] Link appears to be valid.
 
-Link Label: Test 3
-Link URL: /group/linktest/test-3
-Link appears to be valid.
+[1-2] Link Label: Enrergy and Utilities
+[1-2] Link URL: https://www.liferay.com/industries/energy-and-utilities
+[1-2] Link appears to be valid.
 
-Link Label: Energy and Utilities
-Link URL: https://www.liferay.com/industries/energy-and-utilities
-Link appears to be valid.
+[1-3] Link Label: Learn
+[1-3] Link URL: https://learn.liferay.com/
+[1-3] Link appears to be valid.
 
-Link Label: Test 4 (Missing)
-Link URL: http://localhost:8080/group/linktest/test-4
-Link not verified: 404
+...
+
+[1-18] Link Label: Test 5 (Missing)
+[1-18] Link URL: /group/linktest/test-5
+[1-18] Link not verified: 404
 
 **********************************************************************
-[2] Page Name: Public Test 2
-[2] Page URL: http://localhost:8080/web/linktest/public-test-2
-[2] Private Page: No
-[2] Hidden Page: No
-[2] Page Guest View Permission Enabled: No
+[2] Page Name: Search
+[2] Page URL: http://localhost:8080/web/linktest/search
+[2] Page Type: Public Page
+[2] Hidden Page: Yes
+[2] Public Page Guest Role View Permission Enabled: No
 [2] Page Link Count: 0
 **********************************************************************
 
