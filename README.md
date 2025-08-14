@@ -17,6 +17,7 @@
   - **Object Definition ERC**: The ERC of the Liferay Objects Definition where the Site Page Crawler output is saved. Default is CRAWLER_OUTPUT. Used by the Site Page Crawler Widget only.
   - **Page Body Selector**: CSS Selector to identify the Page Body. Default is section#content. This is used to exclude the page header and page footer when looking for links on a page.
   - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
+  - **Run as Guest User**: Whether to run as Guest User or not. Default is false. Used by the Site Page Crawler Widget only. A Guest User will not be able to access pages that don't allow Guest access.
   - **Include Public Pages**: Whether to include public pages. Default is true.
   - **Include Private Pages**: Whether to include private pages. Default is true.
   - **Include Hidden Pages**: Whether to include hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
@@ -65,6 +66,7 @@ Setup Notes:
 Site Name: LinkTest
 Locale: en_US
 Web Content Display Widget Links Only: Yes
+Run as Guest User: No
 Include Public Pages: Yes
 Include Private Pages: Yes
 Include Hidden Pages: Yes
