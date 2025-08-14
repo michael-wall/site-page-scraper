@@ -123,7 +123,7 @@ No links found on the page.
 - The output logic can be refactored to output in spreadsheet format if required by replacing the outputToTxtFile method e.g. using https://poi.apache.org/ - HSSF for .xls and XSSF for .xlsx.
 - The modules have been tested in a local environment with JDK 11, Liferay DXP 7.4 U92 and SAML SSO enabled.
 - The modules have been tested with Public and Private Pages that were either Content Pages or Widget Page using the Web Content Display Widget.
-- The Language of the User is used when retreiving the Pages.
+- The Locale of the User is used when retreiving the Pages unless 'Run as Guest User' is enabled, in which case the Guest User locale (from GUEST_LANGUAGE_ID cookie).
 - A link is considered valid when it returns a 200 HTTP Status Code.
 - The links on the Pages can be Absolute or Relative. Absolute links can be links to other websites but in that case they should be accessible to the server where the Gogo shell command is run from, and not require authentication.
 - The Jsoup API is used to extract all links contained within the <section ... id="content"> .... </section> from Liferays themes. This is done to exclude links from header and footer etc. Change this if needed in Control Panel > System Settings > Content and Data > Site Page Crawler.
