@@ -4,8 +4,8 @@
 
 ## Site Page Crawler Custom Gogo Shell Command Usage ##
 - There are 2 custom Gogo Shell Commands:
-  - crawlPagesAsUser - to crawl the pages as a specific user. Using this approach, the account used MUST be a non-SSO account.
-  - crawlPagesAsGuest - to crawl the Public pages as a Guest user using the Guest User Locale.
+  - crawlPagesAsUser - to crawl the pages of a Site as a specific user. Using this approach, the account used MUST be a non-SSO account.
+  - crawlPagesAsGuest - to crawl the Public Pages of a Site as a Guest user using the Guest User Locale.
 - The syntax and arguments to call the commands are as follows:
 
 ```
