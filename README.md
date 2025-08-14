@@ -23,6 +23,10 @@
   - **Include Hidden Pages**: Whether to include hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
   - **Check Public Page Guest Role View Permission**: Whether to check if the Guest Role has View permission on a public page. Default is false. Only applies to Public Pages.
   - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
+  - **Crawler User Agent**: The User Agent value used by the Site Page Crawler. Default is Liferay Site Page Crawler. This will appear in Nginx access logs etc.
+  - **Connect Timeout**: Connect timeout in milliseconds used when crawling pages and validating links. Default is 10000. Don't change this unless you know what you are doing...
+  - **Connection Request Timeout**: Connection request timeout in milliseconds used when crawling pages and validating links. Default is 10000. Don't change this unless you know what you are doing...
+  - **Socket Timeout**: Socket timeout in milliseconds used when crawling pages and validating links. Default is 10000. Don't change this unless you know what you are doing...
 
 ## Site Page Crawler Widget Setup ##
 - Requires com.mw.site.crawler-1.0.0.jar AND com.mw.site.crawler.web-1.0.0.jar modules to be deployed.
