@@ -1,5 +1,5 @@
-Bundle-Name: site-crawler
-Bundle-SymbolicName: com.mw.site.crawler
+Bundle-Name: site-page-crawler
+Bundle-SymbolicName: com.mw.site.page.crawler
 Bundle-Version: 1.0.0
 Import-Package:\
     !org.jspecify.annotations.*,\

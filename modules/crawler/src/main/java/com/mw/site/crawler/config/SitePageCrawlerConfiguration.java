@@ -9,6 +9,9 @@ import aQute.bnd.annotation.metatype.Meta.Type;
 @Meta.OCD(id = SitePageCrawlerConfiguration.PID, localization = "content/Language", name = "configuration.site-page-crawler.name", description="configuration.site-page-crawler.desc")
 public interface SitePageCrawlerConfiguration {
 	public static final String PID = "com.mw.site.crawler.config.SitePageCrawlerConfiguration";
+	public static final int DEFAULT_TIMEOUT = 10000;
+	
+	public static final String DEFAULT_CRAWLER_USER_AGENT = "Liferay Site Page Crawler";
 	
 	@Meta.AD(deflt = "/mnt/persistent-storage/", required = false, type = Type.String, name = "field.outputFolder.name", description = "field.outputFolder.desc")
 	public String outputFolder();
@@ -22,6 +25,9 @@ public interface SitePageCrawlerConfiguration {
 	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.webContentDisplayWidgetLinksOnly.name", description = "field.webContentDisplayWidgetLinksOnly.desc")
 	public boolean webContentDisplayWidgetLinksOnly();
 
+	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.runAsGuestUser.name", description = "field.runAsGuestUser.desc")
+	public boolean runAsGuestUser();	
+	
 	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.includePublicPages.name", description = "field.includePublicPages.desc")
 	public boolean includePublicPages();	
 	
@@ -36,4 +42,18 @@ public interface SitePageCrawlerConfiguration {
 	
 	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.validateLinksOnPages.name", description = "field.validateLinksOnPages.desc")
 	public boolean validateLinksOnPages();
+	
+	@Meta.AD(deflt = DEFAULT_CRAWLER_USER_AGENT, required = false, type = Type.String, name = "field.crawlerUserAgent.name", description = "field.crawlerUserAgent.desc")
+	public String crawlerUserAgent();
+	
+	@Meta.AD(deflt = "" + DEFAULT_TIMEOUT, required = false, type = Type.String, name = "field.connectTimeout.name", description = "field.connectTimeout.desc")
+	public int connectTimeout();
+	
+	@Meta.AD(deflt = "" + DEFAULT_TIMEOUT, required = false, type = Type.String, name = "field.connectionRequestTimeout.name", description = "field.connectionRequestTimeout.desc")
+	public int connectionRequestTimeout();	
+	
+	@Meta.AD(deflt = "" + DEFAULT_TIMEOUT, required = false, type = Type.String, name = "field.socketTimeout.name", description = "field.socketTimeout.desc")
+	public int socketTimeout();	
+	
+
 }

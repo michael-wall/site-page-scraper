@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
@@ -92,13 +93,19 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		}
 		
 		boolean webContentDisplayWidgetLinksOnly = ParamUtil.getBoolean(actionRequest, "webContentDisplayWidgetLinksOnly");
+		boolean runAsGuestUser = ParamUtil.getBoolean(actionRequest, "runAsGuestUser");
 		boolean includePublicPages = ParamUtil.getBoolean(actionRequest, "includePublicPages");
 		boolean includePrivatePages = ParamUtil.getBoolean(actionRequest, "includePrivatePages");
 		boolean includeHiddenPages = ParamUtil.getBoolean(actionRequest, "includeHiddenPages");
 		boolean checkPageGuestRoleViewPermission = ParamUtil.getBoolean(actionRequest, "checkPageGuestRoleViewPermission");
 		boolean validateLinksOnPages = ParamUtil.getBoolean(actionRequest, "validateLinksOnPages");
 		
-		ConfigTO config = new ConfigTO(webContentDisplayWidgetLinksOnly, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages);
+		if (runAsGuestUser) {
+			includePublicPages = true;
+			includePrivatePages = false;
+		}
+		
+		ConfigTO config = new ConfigTO(webContentDisplayWidgetLinksOnly, runAsGuestUser, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages, _sitePageCrawlerConfiguration.crawlerUserAgent(), _sitePageCrawlerConfiguration.connectTimeout(), _sitePageCrawlerConfiguration.connectionRequestTimeout(), _sitePageCrawlerConfiguration.socketTimeout());
 		
 		HttpServletRequest httpRequest = PortalUtil.getHttpServletRequest(actionRequest);
 		
@@ -108,13 +115,24 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		String relativeUrlPrefix = getRelativeUrlPrefix(themeDisplay);
 		
 		Group group = groupLocalService.fetchGroup(siteId);
-	
-		User user = themeDisplay.getUser();
-		Locale locale = user.getLocale();
+
+		User runAsUser = null;
+
+		if (config.isRunAsGuestUser()) {
+			runAsUser = userLocalService.fetchGuestUser(companyId);
+		} else {
+			runAsUser = themeDisplay.getUser();
+		}
+		
+		User user = runAsUser;
+		Locale locale = runAsUser.getLocale();
+
+		String loggedInFullName = themeDisplay.getUser().getFullName();
+		long loggedInUserId = themeDisplay.getUser().getUserId();
 		String siteName = group.getName(locale);
 		
 		if (!config.isIncludePublicPages() && !config.isIncludePrivatePages()) {
-			_log.info("Background Crawler not triggered for Site " + siteName + " for " + user.getFullName() + " as Include Public Pages and Include Private Pages were both false.");
+			_log.info("Background Crawler not triggered for Site " + siteName + " for " + loggedInFullName + " as Include Public Pages and Include Private Pages were both false.");
 			
 			actionResponse.setRenderParameter("sitePageCrawlerNoPagesFound", "true");
 			actionResponse.setRenderParameter("mvcRenderCommandName", "/crawlerResponse");
@@ -132,12 +150,12 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		
 		String cookieDomain = themeDisplay.getServerName();
 				
-		LayoutCrawler layoutCrawler = new LayoutCrawler(config, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, themeDisplay.getUser());
+		LayoutCrawler layoutCrawler = new LayoutCrawler(config, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
 		
 		List<Layout> layouts = sitePageLinkCrawler.getPages(config, siteId, true);
 		
 		if (layouts == null || layouts.isEmpty()) {
-			_log.info("Background Crawler not triggered for Site " + siteName + " for " + user.getFullName() + " as no matching pages found.");
+			_log.info("Background Crawler not triggered for Site " + siteName + " for " + loggedInFullName + " as no matching pages found.");
 			
 			actionResponse.setRenderParameter("sitePageCrawlerNoPagesFound", "true");
 			actionResponse.setRenderParameter("mvcRenderCommandName", "/crawlerResponse");
@@ -151,9 +169,9 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		    public Void call() throws Exception {
 		        Executors.newSingleThreadExecutor().submit(() -> {
 		            try {
-		            	_log.info("Background Crawler Started for Site " + siteName + " for " + user.getFullName());
+		            	_log.info("Background Crawler Started for Site " + siteName + " for " + loggedInFullName);
 		            	
-		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPage(config, companyId, group, relativeUrlPrefix, user, layoutCrawler, layouts);
+		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPagesWeb(config, companyId, group, relativeUrlPrefix, user, locale, layoutCrawler, layouts);
 		            		            		
 		            	ObjectEntry objectEntry = null;
 		            	String objectDefinitionLabel = null;
@@ -174,10 +192,10 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	        byte[] fileBytes = Files.readAllBytes(path);
 		            			
 		            	        // Filename needs to be unique in file system AND in the DAM DLFolder..
-		            	        FileEntry fileEntry = dlAppLocalService.addFileEntry(UUID.randomUUID().toString(), user.getUserId(), siteId, 0, fileName, fileMimeType, fileBytes, null, null, new ServiceContext());        			
+		            	        FileEntry fileEntry = dlAppLocalService.addFileEntry(UUID.randomUUID().toString(), loggedInUserId, siteId, 0, fileName, fileMimeType, fileBytes, null, null, new ServiceContext());        			
 
 		            			Map<String, Serializable> objectEntryFields = new HashMap<>();
-		            			objectEntryFields.put("requestor", user.getFullName());
+		            			objectEntryFields.put("requestor", loggedInFullName);
 		            			objectEntryFields.put("site", siteName);
 		            			objectEntryFields.put("locale", "" + locale); 
 		            			objectEntryFields.put("output", fileEntry.getFileEntryId());
@@ -185,14 +203,14 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            			objectEntryFields.put("created", new Date()); 
 		            	        
 		            	        objectEntry = objectEntryLocalService.addObjectEntry(
-		            	        	user.getUserId(),
+		            	        	loggedInUserId,
 		            	        	siteId,
 		            	        	crawlerOutputDefinition.getObjectDefinitionId(),
 		            	        	objectEntryFields,
 		            	        	new ServiceContext()
 		            	        );
 		            	        
-		            	        _log.info(objectDefinitionLabel + " Object Record " + objectEntry.getObjectEntryId() + " created for Site " + siteName + " for " + user.getFullName());
+		            	        _log.info(objectDefinitionLabel + " Object Record " + objectEntry.getObjectEntryId() + " created for Site " + siteName + " for " + loggedInFullName);
 		            		} else {
 		            			_log.info("Unable to create Object Record as Object Definition not found: " + _sitePageCrawlerConfiguration.objectDefinitionERC());
 		            		}
@@ -201,7 +219,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	JSONObject notificationJSON = JSONFactoryUtil.createJSONObject();
 
 		            	notificationJSON.put("success", responseTO.isSuccess());
-		            	notificationJSON.put("siteName", group.getName(locale));
+		            	notificationJSON.put("siteName", siteName);
 		            	
 		            	if (responseTO.isSuccess()) {
 			            	notificationJSON.put("filePath", responseTO.getFilePath());
@@ -216,7 +234,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 
 		            	try {
 		            		userNotificationEventLocalService.addUserNotificationEvent(
-		            			user.getUserId(),
+		            			loggedInUserId,
 		            			CrawlerPortletKeys.CRAWLER_PORTLET,
 		            			System.currentTimeMillis(),
 		            			UserNotificationDeliveryConstants.TYPE_WEBSITE,
@@ -228,14 +246,14 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            			new ServiceContext()
 		            		);
 		            			
-		            		_log.info("Liferay Notification sent to " + user.getFullName());
+		            		_log.info("Liferay Notification sent to " + loggedInFullName);
 		            	} catch (Exception e) {
 		            		_log.error("Error adding notification", e);
 		            	}
 		            	
-		            	_log.info("Background Crawler Completed for Site " + siteName + " for " + user.getFullName());
+		            	_log.info("Background Crawler Completed for Site " + siteName + " for " + loggedInFullName);
 		            } catch (Exception e) {
-		                _log.error("Error in Background Crawler Thread for Site " + siteName + " for " + user.getFullName(), e);
+		                _log.error("Error in Background Crawler Thread for Site " + siteName + " for " + loggedInFullName, e);
 		            }
 		        });
 
@@ -271,6 +289,9 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	
 	@Reference(unbind = "-")
 	private GroupLocalService groupLocalService;
+	
+	@Reference(unbind = "-")
+	private UserLocalService userLocalService;
 	
 	@Reference(unbind = "-")
 	private UserNotificationEventLocalService userNotificationEventLocalService;
