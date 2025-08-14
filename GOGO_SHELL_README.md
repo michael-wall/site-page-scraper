@@ -40,9 +40,9 @@ Note:
 Arguments for crawlPagesAsUser:
 - **companyId**: The companyId of the Virtual Instance that the Site resides in.
 - **siteId**: The siteId of the Site to be crawled - get this from Site Settings > Site Configuration.
-- **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com
-- **publicLayoutUrlPrefix**: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet
-- **privateLayoutUrlPrefix**: The base URL used when accessing the Private Pages of the Site e.g. https://mw.com/group/intranet
+- **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com or http://localhost:8080
+- **publicLayoutUrlPrefix**: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet or http://localhost:8080/web/linktest
+- **privateLayoutUrlPrefix**: The base URL used when accessing the Private Pages of the Site e.g. https://mw.com/group/intranet or http://localhost:8080/group/linktest
 - **emailAddress**: The email address of the user to log in as. See 'Crawler User Account' section.
 - **loginIdEnc**: The encrypted login ID (email address or screenName) of the user. See 'Crawler User Account' section.
 - **passwordEnc**: The encrypted password of the user. See 'Crawler User Account' section.
