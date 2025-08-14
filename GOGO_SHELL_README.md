@@ -5,14 +5,14 @@
 ## Site Page Crawler Custom Gogo Shell Command Usage ##
 - There are 2 custom Gogo Shell Commands:
   - crawlPagesAsUser - to crawl the pages as a specific user. Using this approach, the account used MUST be a non-SSO account.
-  - crawlPagesAsGuest - to crawl the pages as a Guest user using the Guest User Locale.
+  - crawlPagesAsGuest - to crawl the Public pages as a Guest user using the Guest User Locale.
 - The syntax and arguments to call the commands are as follows:
 
 ```
 sitePageHTMLCrawler:crawlPagesAsUser "[companyId]" "[siteId]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[emailAddress]" "[loginIdEnc]" "[passwordEnc]" "[cookieDomain]"
 ```
 ```
-sitePageHTMLCrawler:crawlPagesAsGuest "[companyId]" "[siteId]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[cookieDomain]"
+sitePageHTMLCrawler:crawlPagesAsGuest "[companyId]" "[siteId]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[cookieDomain]"
 ```
 
 - For example in Liferay PaaS (with HTTPS):
@@ -21,7 +21,7 @@ sitePageHTMLCrawler:crawlPagesAsGuest "[companyId]" "[siteId]" "[relativeUrlPref
 sitePageLinkCrawler:crawlPagesAsUser "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwsitescraper-prd.lfr.cloud"
 ```
 ```
-sitePageLinkCrawler:crawlPagesAsGuest "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwsitescraper-prd.lfr.cloud/group/mw" "webserver-lctmwsitescraper-prd.lfr.cloud"
+sitePageLinkCrawler:crawlPagesAsGuest "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "webserver-lctmwsitescraper-prd.lfr.cloud"
 ```
 
 - For example in a local dev environment (with HTTP, localhost and port 8080):
@@ -30,7 +30,7 @@ sitePageLinkCrawler:crawlPagesAsGuest "23990396268826" "32920" "https://webserve
 sitePageLinkCrawler:crawlPagesAsUser "20096" "49006" "http://localhost:8080" "http://localhost:8080/web/linktest" "http://localhost:8080/group/linktest" "test@liferay.com" "366b32764248576e783543736e55526e6e57707853773d3d" "3472704e536345712b73575a316c4a6c447a705365673d3d" "localhost"
 ```
 ```
-sitePageLinkCrawler:crawlPagesAsGuest "20096" "49006" "http://localhost:8080" "http://localhost:8080/web/linktest" "http://localhost:8080/group/linktest" "localhost"
+sitePageLinkCrawler:crawlPagesAsGuest "20096" "49006" "http://localhost:8080" "http://localhost:8080/web/linktest" "localhost"
 ```
 
 Note:
@@ -53,7 +53,6 @@ Arguments for crawlPagesAsGuest:
 - **siteId**: The siteId of the Site to be crawled - get this from Site Settings > Site Configuration.
 - **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com
 - **publicLayoutUrlPrefix**: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet
-- **privateLayoutUrlPrefix**: The base URL used when accessing the Private Pages of the Site e.g. https://mw.com/group/intranet
 - **cookieDomain**: The Cookie Domain for the credentials. See 'Crawler User Account' section.
 
 ## Site Page Crawler Custom Gogo Shell Command > Crawler User Account for crawlPagesAsUser ##
