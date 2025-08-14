@@ -1,6 +1,6 @@
 ## Introduction ##
 - This tool can be used to export a list of Links on each Public and Private Page within a specific Liferay Site.
-  - Optionally each Pages Guest Role View Permission can be checked..
+  - Optionally each Pages Guest Role View Permission can be checked.
   - Optionally each Pages Links can be checked to ensure that they are valid.
 
 ## Usage ##
