@@ -28,6 +28,8 @@ ConfigTO sitePageCrawlerConfig = (ConfigTO)request.getAttribute("sitePageCrawler
 					
 					<aui:input type="checkbox" name="validateLinksOnPages" label="validate-links-on-pages" value="<%= sitePageCrawlerConfig.isValidateLinksOnPages() %>" helpMessage="validate-links-on-pages-help-message" />
 
+					<aui:input type="checkbox" name="skipExternalLinks" label="skip-external-links" value="<%= sitePageCrawlerConfig.isSkipExternalLinks() %>" helpMessage="skip-external-links-help-message" />
+
 					<span style="display: inline-block;vertical-align: top; padding-top: 10px;">
 						<clay:button small="true" type="submit" name="run-site-page-crawler" label="run-site-page-crawler" icon="pages-tree" />
 					</span>

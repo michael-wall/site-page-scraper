@@ -5,11 +5,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.mw.site.crawler.config.ConfigTO;
-import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
+import com.mw.site.crawler.config.InfraConfigTO;
+import com.mw.site.crawler.model.LinkTO;
 
 import java.net.URI;
 import java.util.Locale;
@@ -32,64 +31,94 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
 public class LayoutCrawler {
+	public static final int MAX_REDIRECTS = 3;
 	
-    public LayoutCrawler(ConfigTO config, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user, Locale locale) {
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+    public LayoutCrawler(InfraConfigTO infraConfig, boolean isRunAsGuestUser, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user, Locale locale) {
+        _infraConfig = infraConfig;
+    	
+    	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
-        _httpClient = httpClientBuilder.setUserAgent(getCrawlerUserAgent(config.getCrawlerUserAgent())).build();
+        _httpClient = httpClientBuilder.setUserAgent(_infraConfig.getCrawlerUserAgent()).build();
         
+        _relativeUrlPrefix = relativeUrlPrefix;
         _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
         _privateLayoutUrlPrefix = privateLayoutUrlPrefix;
         
-        if (config.isRunAsGuestUser()) {
-        	httpClientContext = _getHttpClientContextGuest(cookieDomain, locale);
+        if (isRunAsGuestUser) {
+        	_setHttpClientContextGuest(cookieDomain, locale);
         } else {
-        	httpClientContext = _getHttpClientContextCurrentUser(httpRequest, cookieDomain, locale);    	
+        	_setHttpClientContextCurrentUser(httpRequest, cookieDomain, locale);    	
         }
     }	
 
-    public LayoutCrawler(ConfigTO config, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+    public LayoutCrawler(InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
+    	_infraConfig = infraConfig;
+    	
+    	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
-        _httpClient = httpClientBuilder.setUserAgent(getCrawlerUserAgent(config.getCrawlerUserAgent())).build();
+        _httpClient = httpClientBuilder.setUserAgent(_infraConfig.getCrawlerUserAgent()).build();
         
+        _relativeUrlPrefix = relativeUrlPrefix;
         _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
         _privateLayoutUrlPrefix = privateLayoutUrlPrefix;
         
-        httpClientContext =  _getHttpClientContextFromCredentials(idEnc, passwordEnc, cookieDomain, locale);    
+        _setHttpClientContextFromCredentials(idEnc, passwordEnc, cookieDomain, locale);    
     }
     
-    public LayoutCrawler(ConfigTO config, String publicLayoutUrlPrefix, String cookieDomain, User user, Locale locale) {
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+    public LayoutCrawler(InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String cookieDomain, User user, Locale locale) {
+    	_infraConfig = infraConfig;
 
-        _httpClient = httpClientBuilder.setUserAgent(getCrawlerUserAgent(config.getCrawlerUserAgent())).build();
+    	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+
+        _httpClient = httpClientBuilder.setUserAgent(_infraConfig.getCrawlerUserAgent()).build();
         
+        _relativeUrlPrefix = relativeUrlPrefix;
         _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
 
-        httpClientContext = _getHttpClientContextGuest(cookieDomain, locale);
+        _setHttpClientContextGuest(cookieDomain, locale);
     }
     
-    public String[] validateLink(ConfigTO config, String url, String relativeUrlPrefix, Locale locale) {	
+    public String[] validateLink(String url, Locale locale, boolean skipExternalLinks) {	
     	String[] responseStringArray = {"", ""};
     	HttpEntity entity = null;
     	
         try {
             RequestConfig requestConfig = RequestConfig.custom()
-                    .setConnectTimeout(getTimeout(config.getConnectTimeout())) // time to establish connection with the server
-                    .setConnectionRequestTimeout(getTimeout(config.getConnectionRequestTimeout())) // time to get connection from pool
-                    .setSocketTimeout(getTimeout(config.getSocketTimeout())) // time waiting for data
+                    .setConnectTimeout(_infraConfig.getConnectTimeout()) // time to establish connection with the server
+                    .setConnectionRequestTimeout(_infraConfig.getConnectionRequestTimeout()) // time to get connection from pool
+                    .setSocketTimeout(_infraConfig.getSocketTimeout()) // time waiting for data
+                    .setMaxRedirects(MAX_REDIRECTS) //Default is 50, changing to 3
                     .build();
             
             URI uri = new URI(url);
             
             if (!uri.isAbsolute()) {
-            	url = relativeUrlPrefix + url;
+            	url = _relativeUrlPrefix + url;
+            } else {
+            	if (skipExternalLinks) {
+            		if (_relativeUrlPrefixUri == null) {
+            			_relativeUrlPrefixUri = new URI(_relativeUrlPrefix);
+            			
+            			_relativeUrlPrefixHost = _relativeUrlPrefixUri.getHost();
+            		}
+
+                	String host = uri.getHost();
+                	
+                	if (Validator.isNotNull(_relativeUrlPrefixHost) && Validator.isNotNull(host) && !host.equalsIgnoreCase(_relativeUrlPrefixHost)) {
+                		_log.info("Skipped External Link: " + url);
+                		
+                        responseStringArray[0] = "" + LinkTO.SKIPPED_STATUS_CODE;
+                        responseStringArray[1] = "Skipped External Link";
+
+                        return responseStringArray;
+                	}            		
+            	}
             }
             
             HttpGet httpGet = new HttpGet(url);
             httpGet.setConfig(requestConfig);
             
-            HttpResponse httpResponse = _httpClient.execute(httpGet, httpClientContext);
+            HttpResponse httpResponse = _httpClient.execute(httpGet, _httpClientContext);
 
             StatusLine statusLine = httpResponse.getStatusLine();
             
@@ -100,9 +129,13 @@ public class LayoutCrawler {
 
             return responseStringArray;
         } catch (Exception e) {
-        	_log.info("Exception validating url: " + url + ", " + e.getClass() + ": " + e.getMessage(), e);
-        	
-        	responseStringArray[0] = "-1";
+        	if (_log.isInfoEnabled()) {
+        		_log.info("Exception validating url: " + url + ", " + e.getClass() + ": " + e.getMessage());	
+        	} else if (_log.isDebugEnabled()) {
+        		_log.info("Exception validating url: " + url + ", " + e.getClass() + ": " + e.getMessage(), e);		
+        	}
+                	
+        	responseStringArray[0] = "" + LinkTO.EXCEPTION_STATUS_CODE;
         	responseStringArray[1] = e.getMessage();
         } finally {
         	try {
@@ -113,16 +146,17 @@ public class LayoutCrawler {
         return responseStringArray;
     }
 
-    public String[] getLayoutContent(ConfigTO config, Layout layout, Locale locale) {
+    public String[] getLayoutContent(Layout layout, Locale locale) {
     	String[] responseStringArray = {"", ""};
     	String layoutFullURL = "";
     	HttpEntity entity = null;
 
         try {
             RequestConfig requestConfig = RequestConfig.custom()
-                    .setConnectTimeout(getTimeout(config.getConnectTimeout())) // time to establish connection with the server
-                    .setConnectionRequestTimeout(getTimeout(config.getConnectionRequestTimeout())) // time to get connection from pool
-                    .setSocketTimeout(getTimeout(config.getSocketTimeout())) // time waiting for data
+                    .setConnectTimeout(_infraConfig.getConnectTimeout()) // time to establish connection with the server
+                    .setConnectionRequestTimeout(_infraConfig.getConnectionRequestTimeout()) // time to get connection from pool
+                    .setSocketTimeout(_infraConfig.getSocketTimeout()) // time waiting for data
+                    .setMaxRedirects(MAX_REDIRECTS) //Default is 50, changing to 3
                     .build();        	
         	
             if (layout.isPrivateLayout()) {
@@ -134,7 +168,7 @@ public class LayoutCrawler {
             HttpGet httpGet = new HttpGet(layoutFullURL);
             httpGet.setConfig(requestConfig);
             
-            HttpResponse httpResponse = _httpClient.execute(httpGet, httpClientContext);
+            HttpResponse httpResponse = _httpClient.execute(httpGet, _httpClientContext);
             
             StatusLine statusLine = httpResponse.getStatusLine();
             
@@ -148,7 +182,11 @@ public class LayoutCrawler {
             } 
         }
         catch (Exception e) {
-        	 _log.info("Unable to crawl layout: " + layoutFullURL + ", " + e.getClass() + ": " + e.getMessage(), e);
+         	if (_log.isInfoEnabled()) {
+         		_log.info("Unable to crawl layout: " + layoutFullURL + ", " + e.getClass() + ": " + e.getMessage());
+        	} else if (_log.isDebugEnabled()) {
+        		_log.info("Unable to crawl layout: " + layoutFullURL + ", " + e.getClass() + ": " + e.getMessage(), e);
+        	}        	 
         } finally {
         	try {
         		if (entity != null) EntityUtils.consume(entity);
@@ -158,11 +196,9 @@ public class LayoutCrawler {
         return null;
     }
 
-    private HttpClientContext _getHttpClientContextFromCredentials(String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
+    private void _setHttpClientContextFromCredentials(String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
 
-        if (_httpClientContext != null) {
-            return _httpClientContext;
-        }
+    	if (_httpClientContext != null) return;
 
         CookieStore cookieStore = new BasicCookieStore();
        
@@ -171,7 +207,7 @@ public class LayoutCrawler {
         BasicClientCookie autoPasswordClientCookie =
                 _createClientCookie(CookiesConstants.NAME_PASSWORD, passwordEnc, cookieDomain);
         BasicClientCookie rememberMeClientCookie =
-                _createClientCookie(CookiesConstants.NAME_REMEMBER_ME, _rememberMe, cookieDomain);
+                _createClientCookie(CookiesConstants.NAME_REMEMBER_ME, "true", cookieDomain);
 
         BasicClientCookie guestLanguageIdClientCookie = _createClientCookie(CookiesConstants.NAME_GUEST_LANGUAGE_ID, LocaleUtil.toLanguageId(locale), cookieDomain);
         
@@ -180,46 +216,50 @@ public class LayoutCrawler {
         cookieStore.addCookie(rememberMeClientCookie);
         cookieStore.addCookie(guestLanguageIdClientCookie);
 
-        HttpClientContext httpClientContext = new HttpClientContext();
+        _httpClientContext = new HttpClientContext();
 
-        httpClientContext.setCookieStore(cookieStore);
-
-        return httpClientContext;
+        _httpClientContext.setCookieStore(cookieStore);
     }
     
-    private HttpClientContext _getHttpClientContextCurrentUser(HttpServletRequest httpRequest, String cookieDomain, Locale locale) {
+    private void _setHttpClientContextCurrentUser(HttpServletRequest httpRequest, String cookieDomain, Locale locale) {
 
-        if (_httpClientContext != null) {
-            return _httpClientContext;
-        }
+    	if (_httpClientContext != null) return;
 
         CookieStore cookieStore = new BasicCookieStore();
         
         Cookie[] cookies = httpRequest.getCookies();
         if (cookies != null) {
-        	_log.info("Cookies count: " + cookies.length);
+        	_log.info("Original Cookies count: " + cookies.length);
         	
-        	//TODO MW See if we can filter to only copying the cookies we care about...
+        	String requiredCookies[] = {
+        		CookiesConstants.NAME_COMPANY_ID,
+        		CookiesConstants.NAME_ID,
+        		CookiesConstants.NAME_JSESSIONID,
+        		CookiesConstants.NAME_COOKIE_SUPPORT,
+        		CookiesConstants.NAME_GUEST_LANGUAGE_ID
+        	};
+        	
             for (Cookie servletCookie : cookies) {
-                BasicClientCookie clientCookie = new BasicClientCookie(servletCookie.getName(), servletCookie.getValue());
-                clientCookie.setDomain(cookieDomain);
-                clientCookie.setPath(servletCookie.getPath() != null ? servletCookie.getPath() : "/");
-                cookieStore.addCookie(clientCookie);
+            	// This MAY break SSO, so commenting out...
+            	//if (Arrays.asList(requiredCookies).contains(servletCookie.getName())) {            	
+	                BasicClientCookie clientCookie = new BasicClientCookie(servletCookie.getName(), servletCookie.getValue());
+	                clientCookie.setDomain(cookieDomain);
+	                clientCookie.setPath(servletCookie.getPath() != null ? servletCookie.getPath() : "/");
+	                cookieStore.addCookie(clientCookie);
+            	//}
             }
+            
+            _log.info("Copied Cookies count: " + cookieStore.getCookies().size());
         }
 
-        HttpClientContext httpClientContext = new HttpClientContext();
+        _httpClientContext = new HttpClientContext();
 
-        httpClientContext.setCookieStore(cookieStore);
-
-        return httpClientContext;
+        _httpClientContext.setCookieStore(cookieStore);
     }    
     
-    private HttpClientContext _getHttpClientContextGuest(String cookieDomain, Locale locale) {
+    private void _setHttpClientContextGuest(String cookieDomain, Locale locale) {
 
-        if (_httpClientContext != null) {
-            return _httpClientContext;
-        }
+        if (_httpClientContext != null) return;
 
         CookieStore cookieStore = new BasicCookieStore();
         
@@ -227,11 +267,9 @@ public class LayoutCrawler {
         
         cookieStore.addCookie(guestLanguageIdClientCookie);
 
-        HttpClientContext httpClientContext = new HttpClientContext();
+        _httpClientContext = new HttpClientContext();
 
-        httpClientContext.setCookieStore(cookieStore);
-
-        return httpClientContext;
+        _httpClientContext.setCookieStore(cookieStore);
     }       
 
     private BasicClientCookie _createClientCookie(
@@ -244,30 +282,19 @@ public class LayoutCrawler {
 
         return basicClientCookie;
     }
-    
-    private int getTimeout(int value) {
-    	if (value <=0) return SitePageCrawlerConfiguration.DEFAULT_TIMEOUT;
-    	
-    	return value;
-    }
 
-    private String getCrawlerUserAgent(String configCrawlerUserAgent) {
-    	if (Validator.isNull(configCrawlerUserAgent)) return SitePageCrawlerConfiguration.DEFAULT_CRAWLER_USER_AGENT;
-    	
-    	return configCrawlerUserAgent;
-    }
+    private HttpClientContext _httpClientContext;   
     
-    private HttpClientContext httpClientContext;
+    private InfraConfigTO _infraConfig;
 
-    private static final Log _log =
-            LogFactoryUtil.getLog(LayoutCrawler.class);
-
-    private static final String _rememberMe = Boolean.toString(true);
-    
+    private String _relativeUrlPrefix;
     private String _publicLayoutUrlPrefix;
     private String _privateLayoutUrlPrefix;
     
+    private URI _relativeUrlPrefixUri;
+    private String _relativeUrlPrefixHost;
+ 
     private HttpClient _httpClient;
-
-    private HttpClientContext _httpClientContext;
+    
+    private static final Log _log = LogFactoryUtil.getLog(LayoutCrawler.class);    
 }

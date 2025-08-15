@@ -5,6 +5,9 @@ import java.io.Serializable;
 public class LinkTO implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
+	public static final long SKIPPED_STATUS_CODE = -2;
+	public static final long EXCEPTION_STATUS_CODE = -1;
+	
 	private String href;
 	private String label;
 	private String statusCode;

@@ -12,14 +12,10 @@ public class ConfigTO implements Serializable {
 	private boolean includeHiddenPages = false;
 	private boolean checkPageGuestRoleViewPermission = false;
 	private boolean validateLinksOnPages = false;
-
-	private String crawlerUserAgent = SitePageCrawlerConfiguration.DEFAULT_CRAWLER_USER_AGENT;
-	private int connectTimeout = SitePageCrawlerConfiguration.DEFAULT_TIMEOUT;
-	private int connectionRequestTimeout = SitePageCrawlerConfiguration.DEFAULT_TIMEOUT;
-	private int socketTimeout = SitePageCrawlerConfiguration.DEFAULT_TIMEOUT;
-
+	private boolean skipExternalLinks = false;
+	
 	public ConfigTO(boolean webContentDisplayWidgetLinksOnly, boolean runAsGuestUser, boolean includePublicPages, boolean includePrivatePages,
-			boolean includeHiddenPages, boolean checkPageGuestRoleViewPermission, boolean validateLinksOnPages, String crawlerUserAgent, int connectTimeout, int connectionRequestTimeout, int socketTimeout) {
+			boolean includeHiddenPages, boolean checkPageGuestRoleViewPermission, boolean validateLinksOnPages, boolean skipExternalLinks) {
 		super();
 		
 		this.webContentDisplayWidgetLinksOnly = webContentDisplayWidgetLinksOnly;
@@ -29,11 +25,7 @@ public class ConfigTO implements Serializable {
 		this.includeHiddenPages = includeHiddenPages;
 		this.checkPageGuestRoleViewPermission = checkPageGuestRoleViewPermission;
 		this.validateLinksOnPages = validateLinksOnPages;
-		
-		this.crawlerUserAgent = crawlerUserAgent;
-		this.connectTimeout = connectTimeout;
-		this.connectionRequestTimeout = connectionRequestTimeout;
-		this.socketTimeout = socketTimeout;
+		this.skipExternalLinks = skipExternalLinks;
 	}
 
 	public boolean isWebContentDisplayWidgetLinksOnly() {
@@ -63,21 +55,8 @@ public class ConfigTO implements Serializable {
 	public boolean isValidateLinksOnPages() {
 		return validateLinksOnPages;
 	}
-	
-	
-	public String getCrawlerUserAgent() {
-		return crawlerUserAgent;
-	}
 
-	public int getConnectTimeout() {
-		return connectTimeout;
-	}
-
-	public int getConnectionRequestTimeout() {
-		return connectionRequestTimeout;
-	}
-	
-	public int getSocketTimeout() {
-		return socketTimeout;
+	public boolean isSkipExternalLinks() {
+		return skipExternalLinks;
 	}
 }

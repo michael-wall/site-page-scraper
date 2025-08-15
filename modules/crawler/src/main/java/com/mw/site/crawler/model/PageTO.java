@@ -12,6 +12,7 @@ public class PageTO implements Serializable {
 	private boolean hiddenPage = false;
 	private long validLinkCount = 0;
 	private long invalidLinkCount = 0;
+	private long skippedLinkCount = 0;
 	private int guestRoleViewPermissionEnabled = -1;
 	
 	private List<LinkTO> links;
@@ -62,6 +63,14 @@ public class PageTO implements Serializable {
 
 	public void setInvalidLinkCount(long invalidLinkCount) {
 		this.invalidLinkCount = invalidLinkCount;
+	}
+
+	public long getSkippedLinkCount() {
+		return skippedLinkCount;
+	}
+
+	public void setSkippedLinkCount(long skippedLinkCount) {
+		this.skippedLinkCount = skippedLinkCount;
 	}
 
 	public List<LinkTO> getLinks() {

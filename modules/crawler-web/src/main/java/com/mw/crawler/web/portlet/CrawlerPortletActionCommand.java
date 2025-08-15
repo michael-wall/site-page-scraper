@@ -31,7 +31,9 @@ import com.mw.crawler.web.constants.CrawlerPortletKeys;
 import com.mw.site.crawler.LayoutCrawler;
 import com.mw.site.crawler.SitePageLinkCrawler;
 import com.mw.site.crawler.config.ConfigTO;
+import com.mw.site.crawler.config.InfraConfigTO;
 import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
+import com.mw.site.crawler.config.SitePageCrawlerInfraConfiguration;
 import com.mw.site.crawler.model.ResponseTO;
 
 import java.io.Serializable;
@@ -67,7 +69,10 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"javax.portlet.name=" + CrawlerPortletKeys.CRAWLER_PORTLET,
 		"mvc.command.name=/crawlPages" },
-	configurationPid = SitePageCrawlerConfiguration.PID,
+	configurationPid = {
+		SitePageCrawlerConfiguration.PID,
+		SitePageCrawlerInfraConfiguration.PID,
+	},
 	service = MVCActionCommand.class
 )
 public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
@@ -77,9 +82,10 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
     protected void activate(Map<String, Object> properties) throws Exception {		
 		if (_log.isInfoEnabled()) _log.info("Activating...");		
 		
-		_sitePageCrawlerConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerConfiguration.class, properties);
-
-		_log.info("objectDefinitionERC: " + _sitePageCrawlerConfiguration.objectDefinitionERC());
+		_sitePageCrawlerConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerConfiguration.class, properties);	
+		_sitePageCrawlerInfraConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerInfraConfiguration.class, properties);
+		
+		_log.info("objectDefinitionERC: " + _sitePageCrawlerInfraConfiguration.objectDefinitionERC());
 	}		
 	
 	@Override
@@ -99,14 +105,16 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		boolean includeHiddenPages = ParamUtil.getBoolean(actionRequest, "includeHiddenPages");
 		boolean checkPageGuestRoleViewPermission = ParamUtil.getBoolean(actionRequest, "checkPageGuestRoleViewPermission");
 		boolean validateLinksOnPages = ParamUtil.getBoolean(actionRequest, "validateLinksOnPages");
+		boolean skipExternalLinks = ParamUtil.getBoolean(actionRequest, "skipExternalLinks");
 		
 		if (runAsGuestUser) {
 			includePublicPages = true;
 			includePrivatePages = false;
 		}
 		
-		ConfigTO config = new ConfigTO(webContentDisplayWidgetLinksOnly, runAsGuestUser, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages, _sitePageCrawlerConfiguration.crawlerUserAgent(), _sitePageCrawlerConfiguration.connectTimeout(), _sitePageCrawlerConfiguration.connectionRequestTimeout(), _sitePageCrawlerConfiguration.socketTimeout());
-		
+		InfraConfigTO infraConfig = sitePageLinkCrawler.getInfraConfiguration();
+		ConfigTO config = new ConfigTO(webContentDisplayWidgetLinksOnly, runAsGuestUser, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages, skipExternalLinks);
+	
 		HttpServletRequest httpRequest = PortalUtil.getHttpServletRequest(actionRequest);
 		
 		long companyId = themeDisplay.getCompanyId();
@@ -150,7 +158,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		
 		String cookieDomain = themeDisplay.getServerName();
 				
-		LayoutCrawler layoutCrawler = new LayoutCrawler(config, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(infraConfig, config.isRunAsGuestUser(), relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
 		
 		List<Layout> layouts = sitePageLinkCrawler.getPages(config, siteId, true);
 		
@@ -179,8 +187,8 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	if (responseTO.isSuccess() && Validator.isNotNull(responseTO.getFilePath())) {
 		            		ObjectDefinition crawlerOutputDefinition = null;
 		            		
-		            		if (Validator.isNotNull(_sitePageCrawlerConfiguration.objectDefinitionERC())) {
-		            			crawlerOutputDefinition = objectDefinitionLocalService.fetchObjectDefinitionByExternalReferenceCode(_sitePageCrawlerConfiguration.objectDefinitionERC(), companyId);
+		            		if (Validator.isNotNull(_sitePageCrawlerInfraConfiguration.objectDefinitionERC())) {
+		            			crawlerOutputDefinition = objectDefinitionLocalService.fetchObjectDefinitionByExternalReferenceCode(_sitePageCrawlerInfraConfiguration.objectDefinitionERC(), companyId);
 		            		}
 		            		
 		            		if (crawlerOutputDefinition != null) {
@@ -212,7 +220,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            	        
 		            	        _log.info(objectDefinitionLabel + " Object Record " + objectEntry.getObjectEntryId() + " created for Site " + siteName + " for " + loggedInFullName);
 		            		} else {
-		            			_log.info("Unable to create Object Record as Object Definition not found: " + _sitePageCrawlerConfiguration.objectDefinitionERC());
+		            			_log.info("Unable to create Object Record as Object Definition not found: " + _sitePageCrawlerInfraConfiguration.objectDefinitionERC());
 		            		}
 		            	}
 		            	
@@ -297,6 +305,8 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	private UserNotificationEventLocalService userNotificationEventLocalService;
 	
 	private volatile SitePageCrawlerConfiguration _sitePageCrawlerConfiguration;
+	
+	private volatile SitePageCrawlerInfraConfiguration _sitePageCrawlerInfraConfiguration;
 	
     @Reference
     private ObjectEntryLocalService objectEntryLocalService;
