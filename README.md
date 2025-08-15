@@ -9,13 +9,11 @@
   - The alternative is the custom Gogo Shell Commands which saves the output report on the Liferay server to be downloaded from the Liferay server. See [here](GOGO_SHELL_README.md) for using the custom Gogo Shell Commands. The **Site Page Crawler System Settings** should be setup first and the **General Notes** and **Warnings** apply to this approach also.
 
 ##  Site Page Crawler System Settings ##
-- Required for both the Site Page Crawler Widget and for the Custom Gogo Shell Command.
-  - In the case of the Site Page Crawler Widget the boolean values are set as the defaults in the GUI and the user can choose to override any of the values before clicking 'Run Site Page Crawler'.
-  - In the case of the Custom Gogo Shell Command the values from the System Settings are applied.
+- The System Settings are required for both the Site Page Crawler Widget and for the Custom Gogo Shell Commands.
+  - In the case of the Site Page Crawler Widget, the Site Page Crawler Job settings on are set as the defaults in the GUI and the user can choose to override any of the values before clicking 'Run Site Page Crawler'.
+  - In the case of the Custom Gogo Shell Commanda the values from the System Settings are applied.
 - Configure the Tool: Control Panel > System Settings > Content and Data > Site Page Crawler
-  - **Output Folder**: The folder that the output file should be written to. In Liferay PaaS this can be the Liferay service's persistent storage directory i.e. "/mnt/persistent-storage/".
-  - **Object Definition ERC**: The ERC of the Liferay Objects Definition where the Site Page Crawler output is saved. Default is CRAWLER_OUTPUT. Used by the Site Page Crawler Widget only.
-  - **Page Body Selector**: CSS Selector to identify the Page Body. Default is section#content. This is used to exclude the page header and page footer when looking for links on a page.
+- Site Page Crawler Job:
   - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
   - **Run as Guest User**: Whether to run as Guest User or not. Default is false. Will only include Public Pages, where the Guest Role has View permission for the page. If enabled the locale used will be the Guest User locale.
   - **Include Public Pages**: Whether to include public pages. Default is true. Will be overridden to true if 'Run as Guest User' is true.
@@ -23,6 +21,10 @@
   - **Include Hidden Pages**: Whether to include hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
   - **Check Public Page Guest Role View Permission**: Whether to check if the Guest Role has View permission on a public page. Default is false. Only applies to Public Pages.
   - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
+- Site Page Crawler Infrastructure:
+  - **Output Folder**: The folder that the output file should be written to. In Liferay PaaS this can be the Liferay service's persistent storage directory i.e. "/mnt/persistent-storage/".
+  - **Object Definition ERC**: The ERC of the Liferay Objects Definition where the Site Page Crawler output is saved. Default is CRAWLER_OUTPUT. Used by the Site Page Crawler Widget only.
+  - **Page Body Selector**: CSS Selector to identify the Page Body. Default is section#content. This is used to exclude the page header and page footer when looking for links on a page.
   - **Crawler User Agent**: The User Agent value used by the Site Page Crawler. Default is Liferay Site Page Crawler. This will appear in Nginx access logs etc.
   - **Connect Timeout**: Connect timeout in milliseconds used when crawling pages and validating links. Default is 10000. Don't change this unless you know what you are doing...
   - **Connection Request Timeout**: Connection request timeout in milliseconds used when crawling pages and validating links. Default is 10000. Don't change this unless you know what you are doing...
