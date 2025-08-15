@@ -21,6 +21,7 @@
   - **Include Hidden Pages**: Whether to include hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
   - **Check Public Page Guest Role View Permission**: Whether to check if the Guest Role has View permission on a public page. Default is false. Only applies to Public Pages.
   - **Validate Links On Pages**: Whether to validate links on pages. Default is false. Enabling this will increase the runtime of the Gogo shell command as it tries to open every URL to verify the HTTP Status Code response.
+  - **Validate Links On Pages > Skip External Links**: Whether to skip external links when 'Validate Links On Pages' is enabled. Default is false. Any hostname other than the hostname the tool uses to access the site pages is considered external.
 - Site Page Crawler Infrastructure:
   - **Output Folder**: The folder that the output file should be written to. In Liferay PaaS this can be the Liferay service's persistent storage directory i.e. "/mnt/persistent-storage/".
   - **Object Definition ERC**: The ERC of the Liferay Objects Definition where the Site Page Crawler output is saved. Default is CRAWLER_OUTPUT. Used by the Site Page Crawler Widget only.
