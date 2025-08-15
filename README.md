@@ -80,6 +80,7 @@ Include Private Pages: No
 Include Hidden Pages: Yes
 Check Public Page Guest Role View Permission: Yes
 Validate Links On Pages: Yes
+Validate Links On Pages > Skip External Links: No
 
 Page Count: 7
 
@@ -125,6 +126,9 @@ No links found on the page.
 ...
 ...
 ...
+Total Link Count: 63
+Total Valid Link Count: 59
+Total Invalid Link Count: 4
 ```
 
 ## General Notes ##
