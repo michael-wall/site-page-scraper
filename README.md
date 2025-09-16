@@ -15,7 +15,8 @@
 - Configure the Tool: Control Panel > System Settings > Content and Data > Site Page Crawler
 - Site Page Crawler Job:
   - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
-  - **Run as Guest User**: Whether to run as Guest User or not. Default is false. Will only include Public Pages, where the Guest Role has View permission for the page. If enabled the locale used will be the Guest User locale.
+  - **Run as Guest User**: Whether to run as Guest User or not. Default is false. Will only include Public Pages, where the Guest Role has View permission for the page.
+  - **Use Current Users Locale when Run as Guest User**: Whether to use the current users locale when run as Guest User or not. If not enabled the locale used will be the Guest User locale. Only used if 'Run as Guest User' is true. This setting is used by the Site Page Crawler Widget only.
   - **Include Public Pages**: Whether to include public pages. Default is true. Will be overridden to true if 'Run as Guest User' is true.
   - **Include Private Pages**: Whether to include private pages. Default is true. Will be overridden to false if 'Run as Guest User' is true.
   - **Include Hidden Pages**: Whether to include hidden pages. Default is false. This is the Page Settings > General > Basic Info > Hidden from Menu Display field.
@@ -137,7 +138,7 @@ Total Invalid Link Count: 4
 - The output logic can be refactored to output in spreadsheet format if required by replacing the outputToTxtFile method e.g. using https://poi.apache.org/ - HSSF for .xls and XSSF for .xlsx.
 - The modules have been tested in a local environment with JDK 11, Liferay DXP 7.4 U92 and SAML SSO enabled.
 - The modules have been tested with Public and Private Pages that were either Content Pages or Widget Page using the Web Content Display Widget.
-- The Locale of the User is used when retreiving the Pages unless 'Run as Guest User' is enabled, in which case the Instance Settings > Localization > Default Language is used.
+- The Locale of the User is used when retrieving the Pages unless 'Run as Guest User' is enabled, in which case the 'Use Current Users Locale when Run as Guest User' setting determines the locale to be used.
 - A link is considered valid when it returns a 200 HTTP Status Code.
 - The links on the Pages can be Absolute or Relative. Absolute links can be links to other websites but in that case they should be accessible to the server where the Gogo shell command is run from, and not require authentication.
 - The Jsoup API is used to extract all links contained within the <section ... id="content"> .... </section> from Liferays themes. This is done to exclude links from header and footer etc. Change this if needed in Control Panel > System Settings > Content and Data > Site Page Crawler.

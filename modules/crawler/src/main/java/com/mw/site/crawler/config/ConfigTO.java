@@ -7,6 +7,7 @@ public class ConfigTO implements Serializable {
 
 	private boolean webContentDisplayWidgetLinksOnly = true;
 	private boolean runAsGuestUser = false;
+	private boolean useCurrentUsersLocaleWhenRunAsGuestUser = false;
 	private boolean includePublicPages = true;
 	private boolean includePrivatePages = true;
 	private boolean includeHiddenPages = false;
@@ -14,12 +15,13 @@ public class ConfigTO implements Serializable {
 	private boolean validateLinksOnPages = false;
 	private boolean skipExternalLinks = false;
 	
-	public ConfigTO(boolean webContentDisplayWidgetLinksOnly, boolean runAsGuestUser, boolean includePublicPages, boolean includePrivatePages,
+	public ConfigTO(boolean webContentDisplayWidgetLinksOnly, boolean runAsGuestUser, boolean useCurrentUsersLocaleWhenRunAsGuestUser, boolean includePublicPages, boolean includePrivatePages,
 			boolean includeHiddenPages, boolean checkPageGuestRoleViewPermission, boolean validateLinksOnPages, boolean skipExternalLinks) {
 		super();
 		
 		this.webContentDisplayWidgetLinksOnly = webContentDisplayWidgetLinksOnly;
 		this.runAsGuestUser = runAsGuestUser;
+		this.useCurrentUsersLocaleWhenRunAsGuestUser = useCurrentUsersLocaleWhenRunAsGuestUser;
 		this.includePublicPages = includePublicPages;
 		this.includePrivatePages = includePrivatePages;
 		this.includeHiddenPages = includeHiddenPages;
@@ -34,6 +36,10 @@ public class ConfigTO implements Serializable {
 
 	public boolean isRunAsGuestUser() {
 		return runAsGuestUser;
+	}
+	
+	public boolean isUseCurrentUsersLocaleWhenRunAsGuestUser() {
+		return useCurrentUsersLocaleWhenRunAsGuestUser;
 	}
 
 	public boolean isIncludePublicPages() {

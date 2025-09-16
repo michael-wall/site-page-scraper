@@ -12,7 +12,10 @@ public class PageTO implements Serializable {
 	private boolean hiddenPage = false;
 	private long validLinkCount = 0;
 	private long invalidLinkCount = 0;
-	private long skippedLinkCount = 0;
+	private long skippedExternalLinkCount = 0;
+	private long skippedPrivateLinkCount = 0;
+	private long loginRequiredLinkCount = 0;
+	private long unexpectedExternalRedirectLinkCount = 0;
 	private int guestRoleViewPermissionEnabled = -1;
 	
 	private List<LinkTO> links;
@@ -56,6 +59,22 @@ public class PageTO implements Serializable {
 	public void setValidLinkCount(long validLinkCount) {
 		this.validLinkCount = validLinkCount;
 	}
+	
+	public long getLoginRequiredLinkCount() {
+		return loginRequiredLinkCount;
+	}
+
+	public void setLoginRequiredLinkCount(long loginRequiredLinkCount) {
+		this.loginRequiredLinkCount = loginRequiredLinkCount;
+	}
+	
+	public long getUnexpectedExternalRedirectLinkCount() {
+		return unexpectedExternalRedirectLinkCount;
+	}
+
+	public void setUnexpectedExternalRedirectLinkCount(long unexpectedExternalRedirectLinkCount) {
+		this.unexpectedExternalRedirectLinkCount = unexpectedExternalRedirectLinkCount;
+	}
 
 	public long getInvalidLinkCount() {
 		return invalidLinkCount;
@@ -65,12 +84,20 @@ public class PageTO implements Serializable {
 		this.invalidLinkCount = invalidLinkCount;
 	}
 
-	public long getSkippedLinkCount() {
-		return skippedLinkCount;
+	public long getSkippedExternalLinkCount() {
+		return skippedExternalLinkCount;
 	}
 
-	public void setSkippedLinkCount(long skippedLinkCount) {
-		this.skippedLinkCount = skippedLinkCount;
+	public void setSkippedExternalLinkCount(long skippedExternalLinkCount) {
+		this.skippedExternalLinkCount = skippedExternalLinkCount;
+	}
+
+	public long getSkippedPrivateLinkCount() {
+		return skippedPrivateLinkCount;
+	}
+
+	public void setSkippedPrivateLinkCount(long skippedPrivateLinkCount) {
+		this.skippedPrivateLinkCount = skippedPrivateLinkCount;
 	}
 
 	public List<LinkTO> getLinks() {

@@ -100,6 +100,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		
 		boolean webContentDisplayWidgetLinksOnly = ParamUtil.getBoolean(actionRequest, "webContentDisplayWidgetLinksOnly");
 		boolean runAsGuestUser = ParamUtil.getBoolean(actionRequest, "runAsGuestUser");
+		boolean useCurrentUsersLocaleWhenRunAsGuestUser = ParamUtil.getBoolean(actionRequest, "useCurrentUsersLocaleWhenRunAsGuestUser");
 		boolean includePublicPages = ParamUtil.getBoolean(actionRequest, "includePublicPages");
 		boolean includePrivatePages = ParamUtil.getBoolean(actionRequest, "includePrivatePages");
 		boolean includeHiddenPages = ParamUtil.getBoolean(actionRequest, "includeHiddenPages");
@@ -110,10 +111,12 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		if (runAsGuestUser) {
 			includePublicPages = true;
 			includePrivatePages = false;
+		} else {
+			useCurrentUsersLocaleWhenRunAsGuestUser = false;
 		}
 		
 		InfraConfigTO infraConfig = sitePageLinkCrawler.getInfraConfiguration();
-		ConfigTO config = new ConfigTO(webContentDisplayWidgetLinksOnly, runAsGuestUser, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages, skipExternalLinks);
+		ConfigTO config = new ConfigTO(webContentDisplayWidgetLinksOnly, runAsGuestUser, useCurrentUsersLocaleWhenRunAsGuestUser, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages, skipExternalLinks);
 	
 		HttpServletRequest httpRequest = PortalUtil.getHttpServletRequest(actionRequest);
 		
@@ -125,15 +128,23 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		Group group = groupLocalService.fetchGroup(siteId);
 
 		User runAsUser = null;
+		Locale runAsLocale = null;
 
 		if (config.isRunAsGuestUser()) {
 			runAsUser = userLocalService.fetchGuestUser(companyId);
+			
+			if (config.isUseCurrentUsersLocaleWhenRunAsGuestUser()) { // From Current User
+				runAsLocale = themeDisplay.getUser().getLocale();
+			} else { // From Guest User
+				runAsLocale = runAsUser.getLocale();
+			}
 		} else {
 			runAsUser = themeDisplay.getUser();
+			runAsLocale = runAsUser.getLocale();
 		}
 		
 		User user = runAsUser;
-		Locale locale = runAsUser.getLocale();
+		Locale locale = runAsLocale;
 
 		String loggedInFullName = themeDisplay.getUser().getFullName();
 		long loggedInUserId = themeDisplay.getUser().getUserId();
@@ -158,7 +169,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		
 		String cookieDomain = themeDisplay.getServerName();
 				
-		LayoutCrawler layoutCrawler = new LayoutCrawler(infraConfig, config.isRunAsGuestUser(), relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(themeDisplay.getCompanyId(), infraConfig, config.isRunAsGuestUser(), relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
 		
 		List<Layout> layouts = sitePageLinkCrawler.getPages(config, siteId, true);
 		

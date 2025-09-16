@@ -17,7 +17,9 @@ ConfigTO sitePageCrawlerConfig = (ConfigTO)request.getAttribute("sitePageCrawler
 					<aui:input type="checkbox" name="webContentDisplayWidgetLinksOnly" label="web-content-display-widget-links-only" value="<%= sitePageCrawlerConfig.isWebContentDisplayWidgetLinksOnly() %>" helpMessage="web-content-display-widget-links-only-help-message" />
 
 					<aui:input type="checkbox" name="runAsGuestUser" label="run-as-guest-user" value="<%= sitePageCrawlerConfig.isRunAsGuestUser() %>" helpMessage="run-as-guest-user-help-message" />
-					
+
+					<aui:input type="checkbox" name="useCurrentUsersLocaleWhenRunAsGuestUser" label="use-current-users-locale-when-run-as-guest-user" value="<%= sitePageCrawlerConfig.isUseCurrentUsersLocaleWhenRunAsGuestUser() %>" helpMessage="use-current-users-locale-when-run-as-guest-user-message" />
+
 					<aui:input type="checkbox" name="includePublicPages" label="include-public-pages" value="<%= sitePageCrawlerConfig.isIncludePublicPages() %>" helpMessage="include-public-pages-help-message" />
 					
 					<aui:input type="checkbox" name="includePrivatePages" label="include-private-pages" value="<%= sitePageCrawlerConfig.isIncludePrivatePages() %>" helpMessage="include-private-pages-help-message" />

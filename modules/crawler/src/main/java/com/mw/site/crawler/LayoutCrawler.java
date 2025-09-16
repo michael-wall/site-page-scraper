@@ -1,22 +1,29 @@
 package com.mw.site.crawler;
 
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.VirtualHost;
+import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.mw.site.crawler.config.InfraConfigTO;
 import com.mw.site.crawler.model.LinkTO;
 
 import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -24,6 +31,7 @@ import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -31,18 +39,20 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
 public class LayoutCrawler {
-	public static final int MAX_REDIRECTS = 3;
+	public static final int MAX_REDIRECTS = 5;
 	
-    public LayoutCrawler(InfraConfigTO infraConfig, boolean isRunAsGuestUser, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user, Locale locale) {
+    public LayoutCrawler(long companyId, InfraConfigTO infraConfig, boolean isRunAsGuestUser, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user, Locale locale) {
         _infraConfig = infraConfig;
     	
     	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-
+    	
         _httpClient = httpClientBuilder.setUserAgent(_infraConfig.getCrawlerUserAgent()).build();
         
         _relativeUrlPrefix = relativeUrlPrefix;
         _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
         _privateLayoutUrlPrefix = privateLayoutUrlPrefix;
+        _virtualHosts = getVirtualHosts();
+        _companyId = companyId;
         
         if (isRunAsGuestUser) {
         	_setHttpClientContextGuest(cookieDomain, locale);
@@ -51,7 +61,7 @@ public class LayoutCrawler {
         }
     }	
 
-    public LayoutCrawler(InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
+    public LayoutCrawler(long companyId, InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
     	_infraConfig = infraConfig;
     	
     	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
@@ -61,11 +71,13 @@ public class LayoutCrawler {
         _relativeUrlPrefix = relativeUrlPrefix;
         _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
         _privateLayoutUrlPrefix = privateLayoutUrlPrefix;
+        _virtualHosts = getVirtualHosts();
+        _companyId = companyId;
         
         _setHttpClientContextFromCredentials(idEnc, passwordEnc, cookieDomain, locale);    
     }
     
-    public LayoutCrawler(InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String cookieDomain, User user, Locale locale) {
+    public LayoutCrawler(long companyId, InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String cookieDomain, User user, Locale locale) {
     	_infraConfig = infraConfig;
 
     	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
@@ -74,13 +86,17 @@ public class LayoutCrawler {
         
         _relativeUrlPrefix = relativeUrlPrefix;
         _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
+        _virtualHosts = getVirtualHosts();
+        _companyId = companyId;
 
         _setHttpClientContextGuest(cookieDomain, locale);
     }
     
-    public String[] validateLink(String url, Locale locale, boolean skipExternalLinks) {	
+    public String[] validateLink(String url, Locale locale, boolean skipExternalLinks, boolean isRunAsGuest) {	
     	String[] responseStringArray = {"", ""};
     	HttpEntity entity = null;
+    	
+    	String privatePagePrefix = PortalUtil.getPathFriendlyURLPrivateGroup() + "/";
     	
         try {
             RequestConfig requestConfig = RequestConfig.custom()
@@ -91,28 +107,59 @@ public class LayoutCrawler {
                     .build();
             
             URI uri = new URI(url);
+            String host = "";
             
-            if (!uri.isAbsolute()) {
+            boolean skipAsPrivatePage = false;
+            boolean skipAsExternal = false;
+            
+            boolean isExternal = false;
+
+            if (!uri.isAbsolute()) { //Relative
             	url = _relativeUrlPrefix + url;
-            } else {
-            	if (skipExternalLinks) {
-            		if (_relativeUrlPrefixUri == null) {
-            			_relativeUrlPrefixUri = new URI(_relativeUrlPrefix);
-            			
-            			_relativeUrlPrefixHost = _relativeUrlPrefixUri.getHost();
+            	
+            	if (isRunAsGuest) {
+            		if (uri.toString().startsWith(privatePagePrefix)) {
+            			skipAsPrivatePage = true;
             		}
-
-                	String host = uri.getHost();
-                	
-                	if (Validator.isNotNull(_relativeUrlPrefixHost) && Validator.isNotNull(host) && !host.equalsIgnoreCase(_relativeUrlPrefixHost)) {
-                		_log.info("Skipped External Link: " + url);
-                		
-                        responseStringArray[0] = "" + LinkTO.SKIPPED_STATUS_CODE;
-                        responseStringArray[1] = "Skipped External Link";
-
-                        return responseStringArray;
-                	}            		
             	}
+            } else { // Absolute
+            	host = uri.getHost();
+            	
+        		if (_relativeUrlPrefixUri == null) {
+        			_relativeUrlPrefixUri = new URI(_relativeUrlPrefix);
+        			
+        			_relativeUrlPrefixHost = _relativeUrlPrefixUri.getHost();
+        		}
+            	
+            	isExternal = isExternalURL(host, _relativeUrlPrefixHost);
+            	
+            	if (isRunAsGuest) {
+            		if (uri.getPath().startsWith(privatePagePrefix)) {
+            			skipAsPrivatePage = true;
+            		}
+            	}
+            	
+            	if (skipExternalLinks && isExternal) {
+            		skipAsExternal = true;
+            	}
+            }
+            
+            if (isRunAsGuest && skipAsPrivatePage) {
+        		_log.info("Skipped Private Page Link: " + url);
+        		
+                responseStringArray[0] = "" + LinkTO.SKIPPED_PRIVATE_PAGE_STATUS_CODE;
+                responseStringArray[1] = "Skipped Private Page Link.";
+
+                return responseStringArray;            	
+            }
+            
+            if (skipExternalLinks && skipAsExternal) {
+        		_log.info("Skipped External Link: " + url);
+        		
+                responseStringArray[0] = "" + LinkTO.SKIPPED_EXTERNAL_LINK_STATUS_CODE;
+                responseStringArray[1] = "Skipped External Link to " + getHostSummary(host);
+
+                return responseStringArray;
             }
             
             HttpGet httpGet = new HttpGet(url);
@@ -123,16 +170,59 @@ public class LayoutCrawler {
             StatusLine statusLine = httpResponse.getStatusLine();
             
             entity = httpResponse.getEntity();
-                       
+            
+            HttpUriRequest finalReq = (HttpUriRequest) _httpClientContext.getRequest();
+            HttpHost finalHost = _httpClientContext.getTargetHost();
+            String finalUrl = finalReq.getURI().isAbsolute() 
+                    ? finalReq.getURI().toString()
+                    : (finalHost.toURI() + finalReq.getURI());
+            
+            String finalPath = finalReq.getURI().getPath();
+            String finalQuery = finalReq.getURI().getQuery();
+            
+            // End URL is a login screen (non-SSO or subset of SSO e.g. if multiple IdP selector shown)
+            if (Validator.isNotNull(finalPath) && finalPath.startsWith("/c/portal/login")) {
+        		_log.info("Login Redirect Triggered: " + url);
+        		
+                responseStringArray[0] = "" + LinkTO.LOGIN_REDIRECT_STATUS_CODE;
+                responseStringArray[1] = "Login Redirect Triggered.";
+
+                return responseStringArray;       
+            }
+            
+            // End URL is a login screen (non-SSO or subset of SSO e.g. if multiple IdP selector shown)
+            if (Validator.isNotNull(finalQuery) && finalQuery.indexOf("_com_liferay_login_web_portlet_LoginPortlet") > 0) {
+        		_log.info("Login Redirect Triggered: " + url);
+        		
+                responseStringArray[0] = "" + LinkTO.LOGIN_REDIRECT_STATUS_CODE;
+                responseStringArray[1] = "Login Redirect Triggered.";
+
+                return responseStringArray;       
+            }
+            
+            URI finalUrlUri = new URI(finalUrl);
+            
+            boolean finalUrlIsExternal = isExternalURL(finalUrlUri.getHost(), _relativeUrlPrefixHost);
+            
+            // Started internal, ended external... possibly due to SSO but can't be confirmed...
+            if (!isExternal && finalUrlIsExternal) {
+        		_log.info("Unexpected External Redirect Triggered: " + url);
+        		
+                responseStringArray[0] = "" + LinkTO.UNEXPECTED_EXTERNAL_REDIRECT_STATUS_CODE;
+                responseStringArray[1] = "Unexpected External Redirect Triggered to " + getHostSummary(finalUrlUri.getHost());
+
+                return responseStringArray;       
+            }
+            
             responseStringArray[0] = "" + statusLine.getStatusCode();
             responseStringArray[1] = "" + statusLine.getReasonPhrase();
 
             return responseStringArray;
         } catch (Exception e) {
-        	if (_log.isInfoEnabled()) {
+        	if (_log.isDebugEnabled()) {
+        		_log.info("Exception validating url: " + url + ", " + e.getClass() + ": " + e.getMessage(), e);
+        	} else if (_log.isInfoEnabled()) {
         		_log.info("Exception validating url: " + url + ", " + e.getClass() + ": " + e.getMessage());	
-        	} else if (_log.isDebugEnabled()) {
-        		_log.info("Exception validating url: " + url + ", " + e.getClass() + ": " + e.getMessage(), e);		
         	}
                 	
         	responseStringArray[0] = "" + LinkTO.EXCEPTION_STATUS_CODE;
@@ -144,6 +234,15 @@ public class LayoutCrawler {
         }
         
         return responseStringArray;
+    }
+    
+    private boolean isExternalURL(String host, String relativeUrlPrefixHost) {
+    	
+    	if (Validator.isNotNull(relativeUrlPrefixHost) && Validator.isNotNull(host) && !host.equalsIgnoreCase(relativeUrlPrefixHost)) {
+    		return true;
+    	}
+    	
+    	return false;
     }
 
     public String[] getLayoutContent(Layout layout, Locale locale) {
@@ -282,6 +381,30 @@ public class LayoutCrawler {
 
         return basicClientCookie;
     }
+    
+    private String getHostSummary(String host) {
+    	if (Validator.isNull(host)) return host;
+    	
+        for (VirtualHost vh: _virtualHosts) {
+			if (vh.getHostname().equalsIgnoreCase(host) && vh.getCompanyId() == _companyId) {
+				return host + " (Virtual Host in this Virtual Instance.)";
+			} else if (vh.getHostname().equalsIgnoreCase(host)) {
+				return host + " (Virtual Host in other Virtual Instance.)";
+			}
+		}
+    	
+        return host;
+    }
+    
+    private List<VirtualHost> getVirtualHosts() {
+    	
+    	//ALL not just current company
+    	List<VirtualHost> virtualHosts = VirtualHostLocalServiceUtil.getVirtualHosts(QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+    	
+    	return virtualHosts;
+    }
+    
+    private List<VirtualHost> _virtualHosts;
 
     private HttpClientContext _httpClientContext;   
     
@@ -295,6 +418,8 @@ public class LayoutCrawler {
     private String _relativeUrlPrefixHost;
  
     private HttpClient _httpClient;
+    
+    private long _companyId;
     
     private static final Log _log = LogFactoryUtil.getLog(LayoutCrawler.class);    
 }

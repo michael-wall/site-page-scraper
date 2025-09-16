@@ -5,8 +5,11 @@ import java.io.Serializable;
 public class LinkTO implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
-	public static final long SKIPPED_STATUS_CODE = -2;
 	public static final long EXCEPTION_STATUS_CODE = -1;
+	public static final long SKIPPED_EXTERNAL_LINK_STATUS_CODE = -2;
+	public static final long SKIPPED_PRIVATE_PAGE_STATUS_CODE = -3;
+	public static final long LOGIN_REDIRECT_STATUS_CODE = -4;
+	public static final long UNEXPECTED_EXTERNAL_REDIRECT_STATUS_CODE = -5;
 	
 	private String href;
 	private String label;

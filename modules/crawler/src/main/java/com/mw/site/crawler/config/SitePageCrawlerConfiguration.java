@@ -16,6 +16,9 @@ public interface SitePageCrawlerConfiguration {
 	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.runAsGuestUser.name", description = "field.runAsGuestUser.desc")
 	public boolean runAsGuestUser();	
 	
+	@Meta.AD(deflt = "false", required = false, type = Type.Boolean, name = "field.useCurrentUsersLocaleWhenRunAsGuestUser.name", description = "field.useCurrentUsersLocaleWhenRunAsGuestUser.desc")
+	public boolean useCurrentUsersLocaleWhenRunAsGuestUser();
+	
 	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.includePublicPages.name", description = "field.includePublicPages.desc")
 	public boolean includePublicPages();	
 	

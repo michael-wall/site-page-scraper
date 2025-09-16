@@ -84,8 +84,9 @@ public class SitePageLinkCrawler {
 		_log.info("starting crawlPagesWeb");
 		
 		_log.info("CompanyId: " + companyId);
-		_log.info("GroupId: " + group.getGroupId());
-		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
+		_log.info("Site GroupId: " + group.getGroupId());
+		_log.info("Locale: " + locale);
+		_log.info("RelativeUrlPrefix: " + relativeUrlPrefix);
 		
 		return crawlPages(config, relativeUrlPrefix, user, locale, group, layoutCrawler, layouts, true);
 	}
@@ -97,7 +98,7 @@ public class SitePageLinkCrawler {
 		long siteId = Long.valueOf(siteIdString);
 		
 		_log.info("CompanyId: " + companyId);
-		_log.info("SiteId: " + siteId);
+		_log.info("Site GroupId: " + siteId);
 		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
 		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
 		_log.info("PrivateLayoutURLPrefix: " + privateLayoutUrlPrefix);
@@ -137,9 +138,9 @@ public class SitePageLinkCrawler {
 		
 		//The synchronous always uses the System Settings...
 		InfraConfigTO infraConfig = getInfraConfiguration();
-		ConfigTO config = getDefaultConfiguration(false);
+		ConfigTO config = getDefaultConfiguration(false, false);
 		
-		LayoutCrawler layoutCrawler = new LayoutCrawler(infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, loginIdEnc, passwordEnc, cookieDomain, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, loginIdEnc, passwordEnc, cookieDomain, locale);
 		
 		List<Layout> layouts = getPages(config, siteId, false);
 		
@@ -153,8 +154,8 @@ public class SitePageLinkCrawler {
 		long siteId = Long.valueOf(siteIdString);
 		
 		_log.info("CompanyId: " + companyId);
-		_log.info("SiteId: " + siteId);
-		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
+		_log.info("Site GroupId: " + siteId);
+		_log.info("RelativeUrlPrefix: " + relativeUrlPrefix);
 		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
 		_log.info("CookieDomain: " + cookieDomain);
 		
@@ -183,9 +184,9 @@ public class SitePageLinkCrawler {
 		
 		//The synchronous always uses the System Settings...
 		InfraConfigTO infraConfig = getInfraConfiguration();
-		ConfigTO config = getDefaultConfiguration(true);
+		ConfigTO config = getDefaultConfiguration(true, false); // Running from Gogo Shell, this always uses Guest Locale...
 
-		LayoutCrawler layoutCrawler = new LayoutCrawler(infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, cookieDomain, guestUser, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, cookieDomain, guestUser, locale);
 		
 		List<Layout> layouts = getPages(config, siteId, false);
 		
@@ -268,7 +269,10 @@ public class SitePageLinkCrawler {
 						
 						long validLinkCount = 0;
 						long invalidLinkCount = 0;
-						long skippedLinkCount = 0;
+						long skippedExternalLinkCount = 0;
+						long skippedPrivateLinkCount = 0;
+						long loginRequiredLinkCount = 0;
+						long unexpectedExternalRedirectLinkCount = 0;
 						
 						if (!links.isEmpty()) {
 							for (Element link: links) {
@@ -278,12 +282,18 @@ public class SitePageLinkCrawler {
 									String[] linkStatus = {"", ""};
 									
 									if (config.isValidateLinksOnPages()) {
-										linkStatus = layoutCrawler.validateLink(href, locale, config.isSkipExternalLinks());
+										linkStatus = layoutCrawler.validateLink(href, locale, config.isSkipExternalLinks(), config.isRunAsGuestUser());
 										
 										if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
 											validLinkCount += 1;
-										} else if (Validator.isNotNull(linkStatus) && linkStatus[0].equalsIgnoreCase("" + LinkTO.SKIPPED_STATUS_CODE)) {
-											skippedLinkCount += 1;
+										} else if (Validator.isNotNull(linkStatus) && (linkStatus[0].equalsIgnoreCase("" + LinkTO.SKIPPED_EXTERNAL_LINK_STATUS_CODE))) {
+											skippedExternalLinkCount += 1;
+										} else if (Validator.isNotNull(linkStatus) && (linkStatus[0].equalsIgnoreCase("" + LinkTO.SKIPPED_PRIVATE_PAGE_STATUS_CODE))) {
+											skippedPrivateLinkCount += 1;												
+										} else if (Validator.isNotNull(linkStatus) && (linkStatus[0].equalsIgnoreCase("" + LinkTO.LOGIN_REDIRECT_STATUS_CODE))) {
+											loginRequiredLinkCount += 1;
+										} else if (Validator.isNotNull(linkStatus) && (linkStatus[0].equalsIgnoreCase("" + LinkTO.UNEXPECTED_EXTERNAL_REDIRECT_STATUS_CODE))) {
+											unexpectedExternalRedirectLinkCount += 1;										
 										} else {
 											invalidLinkCount += 1;
 										}							
@@ -297,7 +307,10 @@ public class SitePageLinkCrawler {
 						if (config.isValidateLinksOnPages()) {
 							pageTO.setValidLinkCount(validLinkCount);
 							pageTO.setInvalidLinkCount(invalidLinkCount);	
-							pageTO.setSkippedLinkCount(skippedLinkCount);	
+							pageTO.setSkippedExternalLinkCount(skippedExternalLinkCount);	
+							pageTO.setSkippedPrivateLinkCount(skippedPrivateLinkCount);	
+							pageTO.setLoginRequiredLinkCount(loginRequiredLinkCount);
+							pageTO.setUnexpectedExternalRedirectLinkCount(unexpectedExternalRedirectLinkCount);
 						}
 						
 						pageTO.setLinks(linkTOs);
@@ -333,7 +346,7 @@ public class SitePageLinkCrawler {
 			
 			File outputFolderFile = new File(_sitePageCrawlerInfraConfiguration.outputFolder());
 			if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
-			
+
 			String fileName = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + ".txt";
 			String outputFilePath = outputFolderFile.getAbsolutePath() + "/" + fileName;
 
@@ -407,7 +420,10 @@ public class SitePageLinkCrawler {
 			long totalLinkCount = 0;
 			long totalValidLinkCount = 0;
 			long totalInvalidLinkCount = 0;
-			long totalSkippedLinkCount = 0;
+			long totalSkippedExternalLinkCount = 0;
+			long totalSkippedPrivateLinkCount = 0;
+			long totalLoginRequiredLinkCount = 0;
+			long totalUnexpectedExternalRedirectLinkCount = 0;
 			
 			if (asynchronous) {
 				printWriter.println("Trigger: Site Page Crawler Widget");
@@ -421,13 +437,18 @@ public class SitePageLinkCrawler {
 			
 			printWriter.println("Site Name: " + siteName);
 			if (config.isRunAsGuestUser()) {
-				printWriter.println("Locale: " + localeString + " (from Guest User)");
+				if (config.isUseCurrentUsersLocaleWhenRunAsGuestUser()) {
+					printWriter.println("Locale: " + localeString + " (from Current User)");
+				} else {
+					printWriter.println("Locale: " + localeString + " (from Guest User)");
+				}
 			} else {
 				printWriter.println("Locale: " + localeString);	
 			}
 			printWriter.println("Web Content Display Widget Links Only: " + getLabel(config.isWebContentDisplayWidgetLinksOnly()));
 			printWriter.println("Run as Guest User: " + getLabel(config.isRunAsGuestUser()));
 			if (config.isRunAsGuestUser()) {
+				printWriter.println("Use Current Users Locale when Run as Guest User: " + getLabel(config.isUseCurrentUsersLocaleWhenRunAsGuestUser()));
 				printWriter.println("Include Public Pages: Yes (Overridden)");
 				printWriter.println("Include Private Pages: No (Overridden)");
 			} else {
@@ -480,11 +501,17 @@ public class SitePageLinkCrawler {
 				if (config.isValidateLinksOnPages() && pageHasLinks) {
 					printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
 					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
-					printWriter.println("[" + pageCount + "] Skipped External Link Count: " + pageTO.getSkippedLinkCount());
+					printWriter.println("[" + pageCount + "] Skipped External Link Count: " + pageTO.getSkippedExternalLinkCount());
+					printWriter.println("[" + pageCount + "] Skipped Private Link Count: " + pageTO.getSkippedPrivateLinkCount());
+					printWriter.println("[" + pageCount + "] Login Required Link Count: " + pageTO.getLoginRequiredLinkCount());
+					printWriter.println("[" + pageCount + "] Unexpected External Redirect Link Count: " + pageTO.getUnexpectedExternalRedirectLinkCount());
 					
 					totalValidLinkCount += pageTO.getValidLinkCount();
 					totalInvalidLinkCount += pageTO.getInvalidLinkCount();
-					totalSkippedLinkCount += pageTO.getSkippedLinkCount();
+					totalSkippedExternalLinkCount += pageTO.getSkippedExternalLinkCount();
+					totalSkippedPrivateLinkCount += pageTO.getSkippedPrivateLinkCount();
+					totalLoginRequiredLinkCount += pageTO.getLoginRequiredLinkCount();
+					totalUnexpectedExternalRedirectLinkCount += pageTO.getUnexpectedExternalRedirectLinkCount();
 							
 				}
 				printWriter.println("**********************************************************************");
@@ -501,8 +528,14 @@ public class SitePageLinkCrawler {
 						if (config.isValidateLinksOnPages()) {
 							if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
 								printWriter.println("[" + pageCount + "-" + linkCount + "] Link appears to be valid.");
-							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.SKIPPED_STATUS_CODE)) {
-								printWriter.println("[" + pageCount + "-" + linkCount + "] External Link skipped.");
+							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.SKIPPED_EXTERNAL_LINK_STATUS_CODE)) {
+								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());
+							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.SKIPPED_PRIVATE_PAGE_STATUS_CODE)) {
+								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());
+							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.LOGIN_REDIRECT_STATUS_CODE)) {
+								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());
+							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.UNEXPECTED_EXTERNAL_REDIRECT_STATUS_CODE)) {
+								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());						
 							} else {
 								if (Validator.isNotNull(linkTO.getStatusMessage())) {
 									printWriter.println("[" + pageCount + "-" + linkCount + "] Link not verified: " + linkTO.getStatusCode() + ", " + linkTO.getStatusMessage());
@@ -531,8 +564,13 @@ public class SitePageLinkCrawler {
 				printWriter.println("Total Valid Link Count: " + totalValidLinkCount);
 				printWriter.println("Total Invalid Link Count: " + totalInvalidLinkCount);
 				if (config.isSkipExternalLinks()) {
-					printWriter.println("Total Skipped External Link Count: " + totalSkippedLinkCount);
+					printWriter.println("Total Skipped External Link Count: " + totalSkippedExternalLinkCount);
 				}
+				if (config.isRunAsGuestUser()) {
+					printWriter.println("Total Skipped Private Link Count: " + totalSkippedPrivateLinkCount);
+				}
+				printWriter.println("Total Login Required Link Count Link Count: " + totalLoginRequiredLinkCount);
+				printWriter.println("Total Unexpected External Redirect Link Count: " + totalUnexpectedExternalRedirectLinkCount);
 			}
 
 			return true;
@@ -642,7 +680,7 @@ public class SitePageLinkCrawler {
 		return  infraConfig;
 	}
 	
-	public ConfigTO getDefaultConfiguration(boolean runAsGuestUser) {
+	public ConfigTO getDefaultConfiguration(boolean runAsGuestUser, boolean useCurrentUsersLocaleWhenRunAsGuestUser) {
 		
 		boolean includePublicPages = _sitePageCrawlerConfiguration.includePublicPages();
 		boolean includePrivatePages = _sitePageCrawlerConfiguration.includePrivatePages();
@@ -650,15 +688,17 @@ public class SitePageLinkCrawler {
 		if (runAsGuestUser) {
 			includePublicPages = true;
 			includePrivatePages = false;
+		} else {
+			useCurrentUsersLocaleWhenRunAsGuestUser = false;
 		}
 		
-		ConfigTO config = new ConfigTO(_sitePageCrawlerConfiguration.webContentDisplayWidgetLinksOnly(), runAsGuestUser, includePublicPages, includePrivatePages, _sitePageCrawlerConfiguration.includeHiddenPages(), _sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission(), _sitePageCrawlerConfiguration.validateLinksOnPages(), _sitePageCrawlerConfiguration.skipExternalLinks());
+		ConfigTO config = new ConfigTO(_sitePageCrawlerConfiguration.webContentDisplayWidgetLinksOnly(), runAsGuestUser, useCurrentUsersLocaleWhenRunAsGuestUser, includePublicPages, includePrivatePages, _sitePageCrawlerConfiguration.includeHiddenPages(), _sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission(), _sitePageCrawlerConfiguration.validateLinksOnPages(), _sitePageCrawlerConfiguration.skipExternalLinks());
 		
 		return config;
 	}
 	
 	public ConfigTO getDefaultConfiguration() {
-		return getDefaultConfiguration(_sitePageCrawlerConfiguration.runAsGuestUser());
+		return getDefaultConfiguration(_sitePageCrawlerConfiguration.runAsGuestUser(), _sitePageCrawlerConfiguration.useCurrentUsersLocaleWhenRunAsGuestUser());
 	}
 	
 	@Reference
