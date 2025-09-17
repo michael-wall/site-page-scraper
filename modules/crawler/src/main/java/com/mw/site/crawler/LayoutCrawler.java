@@ -199,10 +199,10 @@ public class LayoutCrawler {
             }
             
             if (skipExternalLinks && skipAsExternal) {
-        		_log.info("Skipped External Link: " + url);
+        		_log.info("Skipped Other Hostname Link: " + url);
         		
                 responseStringArray[0] = "" + LinkTO.SKIPPED_EXTERNAL_LINK_STATUS_CODE;
-                responseStringArray[1] = "Skipped External Link to " + getHostSummary(host);
+                responseStringArray[1] = "Skipped Other Hostname Link to " + getHostSummary(host);
 
                 return responseStringArray;
             }
@@ -251,10 +251,10 @@ public class LayoutCrawler {
             
             // Started internal, ended external... possibly due to SSO but can't be confirmed...
             if (!isExternal && finalUrlIsExternal) {
-        		_log.info("Unexpected External Redirect Triggered: " + url);
+        		_log.info("Unexpected Redirect to other hostname triggered: " + url);
         		
                 responseStringArray[0] = "" + LinkTO.UNEXPECTED_EXTERNAL_REDIRECT_STATUS_CODE;
-                responseStringArray[1] = "Unexpected External Redirect Triggered to " + getHostSummary(finalUrlUri.getHost());
+                responseStringArray[1] = "Unexpected Redirect to other hostname triggered to " + getHostSummary(finalUrlUri.getHost());
 
                 return responseStringArray;       
             }

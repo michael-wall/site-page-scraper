@@ -469,9 +469,9 @@ public class SitePageLinkCrawler {
 			if (config.isIncludePublicPages()) {
 				printWriter.println("Check Public Page Guest Role View Permission: " + getLabel(config.isCheckPageGuestRoleViewPermission()));	
 			}
-			printWriter.println("Validate Links On Pages: " + getLabel(config.isValidateLinksOnPages()));
+			printWriter.println("Validate Links on Pages: " + getLabel(config.isValidateLinksOnPages()));
 			if (config.isValidateLinksOnPages()) {
-				printWriter.println("Validate Links On Pages > Skip External Links: " + getLabel(config.isSkipExternalLinks()));
+				printWriter.println("Validate Links on Pages > Skip Links using any other hostname: " + getLabel(config.isSkipExternalLinks()));
 			}
 			printWriter.println("");
 			printWriter.println("Page Count: " + pageTOs.size());
@@ -511,7 +511,7 @@ public class SitePageLinkCrawler {
 				if (config.isValidateLinksOnPages() && pageHasLinks) {
 					printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
 					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
-					printWriter.println("[" + pageCount + "] Skipped External Link Count: " + pageTO.getSkippedExternalLinkCount());
+					printWriter.println("[" + pageCount + "] Skipped Other Hostname Link Count: " + pageTO.getSkippedExternalLinkCount());
 					printWriter.println("[" + pageCount + "] Skipped Private Link Count: " + pageTO.getSkippedPrivateLinkCount());
 					printWriter.println("[" + pageCount + "] Login Required Link Count: " + pageTO.getLoginRequiredLinkCount());
 					printWriter.println("[" + pageCount + "] Unexpected External Redirect Link Count: " + pageTO.getUnexpectedExternalRedirectLinkCount());
@@ -575,13 +575,13 @@ public class SitePageLinkCrawler {
 				printWriter.println("Total Valid Link Count: " + totalValidLinkCount);
 				printWriter.println("Total Invalid Link Count: " + totalInvalidLinkCount);
 				if (config.isSkipExternalLinks()) {
-					printWriter.println("Total Skipped External Link Count: " + totalSkippedExternalLinkCount);
+					printWriter.println("Total Skipped Other Hostname Link Count: " + totalSkippedExternalLinkCount);
 				}
 				if (config.isRunAsGuestUser()) {
 					printWriter.println("Total Skipped Private Link Count: " + totalSkippedPrivateLinkCount);
 				}
 				printWriter.println("Total Login Required Link Count Link Count: " + totalLoginRequiredLinkCount);
-				printWriter.println("Total Unexpected External Redirect Link Count: " + totalUnexpectedExternalRedirectLinkCount);
+				printWriter.println("Total Unexpected Other Hostname Redirect Link Count: " + totalUnexpectedExternalRedirectLinkCount);
 			}
 
 			return true;
