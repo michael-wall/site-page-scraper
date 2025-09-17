@@ -80,6 +80,9 @@ public class SitePageLinkCrawler {
 		_log.info("socketTimeout: " + _sitePageCrawlerInfraConfiguration.socketTimeout());
 	}
 	
+    /**
+     * Used by web
+     */	
 	public ResponseTO crawlPagesWeb(ConfigTO config, long companyId, Group group, String relativeUrlPrefix, User user, Locale locale, LayoutCrawler layoutCrawler, List<Layout> layouts) {
 		_log.info("starting crawlPagesWeb");
 		
@@ -88,9 +91,12 @@ public class SitePageLinkCrawler {
 		_log.info("Locale: " + locale);
 		_log.info("RelativeUrlPrefix: " + relativeUrlPrefix);
 		
-		return crawlPages(config, relativeUrlPrefix, user, locale, group, layoutCrawler, layouts, true);
+		return crawlPages(config, relativeUrlPrefix, user, locale, group, layoutCrawler, layouts);
 	}
 
+    /**
+     * Used by gogo shell sitePageHTMLCrawler:crawlPagesAsUser
+     */   	
 	public void crawlPagesAsUser(String companyIdString, String siteIdString, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String loginIdEnc, String passwordEnc, String cookieDomain) {
 		_log.info("starting crawlPagesAsUser");
 		
@@ -140,13 +146,16 @@ public class SitePageLinkCrawler {
 		InfraConfigTO infraConfig = getInfraConfiguration();
 		ConfigTO config = getDefaultConfiguration(false, false);
 		
-		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, loginIdEnc, passwordEnc, cookieDomain, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, loginIdEnc, passwordEnc, cookieDomain, locale);
 		
 		List<Layout> layouts = getPages(config, siteId, false);
 		
-		crawlPages(config, relativeUrlPrefix, user, locale, group, layoutCrawler, layouts, false);
+		crawlPages(config, relativeUrlPrefix, user, locale, group, layoutCrawler, layouts);
 	}
 	
+    /**
+     * Used by gogo shell sitePageHTMLCrawler:crawlPagesAsGuest
+     */  	
 	public void crawlPagesAsGuest(String companyIdString, String siteIdString, String relativeUrlPrefix, String publicLayoutUrlPrefix, String cookieDomain) {
 		_log.info("starting crawlPagesAsGuest");
 		
@@ -186,14 +195,14 @@ public class SitePageLinkCrawler {
 		InfraConfigTO infraConfig = getInfraConfiguration();
 		ConfigTO config = getDefaultConfiguration(true, false); // Running from Gogo Shell, this always uses Guest Locale...
 
-		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, cookieDomain, guestUser, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, cookieDomain, guestUser, locale);
 		
 		List<Layout> layouts = getPages(config, siteId, false);
 		
-		crawlPages(config, relativeUrlPrefix, guestUser, locale, group, layoutCrawler, layouts, false);
+		crawlPages(config, relativeUrlPrefix, guestUser, locale, group, layoutCrawler, layouts);
 	}	
 
-	private ResponseTO crawlPages(ConfigTO config, String relativeUrlPrefix, User user, Locale locale, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts, boolean asynchronous) {
+	private ResponseTO crawlPages(ConfigTO config, String relativeUrlPrefix, User user, Locale locale, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts) {
 		
 		long guestRoleId = getGuestRoleId(user.getCompanyId());
 		
@@ -207,10 +216,10 @@ public class SitePageLinkCrawler {
 			if (layoutCrawler != null) {
 				for (Layout layout: layouts) {
 					if (!pageTOs.isEmpty() && pageTOs.size() % 50 == 0) { // Show progress...
-						if (asynchronous) {
-							log("Asynchronous Site Page Crawler still running in Site " + group.getName(locale) + " for " + user.getFullName(), asynchronous);
+						if (layoutCrawler.isAsynchronous()) {
+							log("Asynchronous Site Page Crawler still running in Site " + group.getName(locale) + " for " + user.getFullName(), layoutCrawler.isAsynchronous());
 						} else {
-							log("Site Page Crawler still running in Site " + group.getName(locale) + " for " + user.getFullName(), asynchronous);
+							log("Site Page Crawler still running in Site " + group.getName(locale) + " for " + user.getFullName(), layoutCrawler.isAsynchronous());
 						}
 					}
 					
@@ -326,11 +335,11 @@ public class SitePageLinkCrawler {
 				if (hasLayouts) {
 					message = "No Pages crawled - check the logs for errors and ensure that the Crawler settings were correct.";
 					
-					log(message, asynchronous);
+					log(message, layoutCrawler.isAsynchronous());
 				} else {
 					message = "No Pages found. Ensure that the Crawler settings were correct.";
 					
-					log(message, asynchronous);	
+					log(message, layoutCrawler.isAsynchronous());	
 				}
 				
 				return new ResponseTO(false, null, message, 0);
@@ -339,7 +348,7 @@ public class SitePageLinkCrawler {
 				
 				message = "No Pages crawled - check that the Crawler settings were correct, in particular the Page Body Selector value.";
 				
-				log(message, asynchronous);
+				log(message, layoutCrawler.isAsynchronous());
 				
 				return new ResponseTO(false, null, message, 0);
 			}
@@ -352,10 +361,10 @@ public class SitePageLinkCrawler {
 
 			Path normalizedOutputFilePath = Paths.get(outputFilePath).normalize();
 			
-			boolean fileGenerated = outputToTxtFile(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), asynchronous);
+			boolean fileGenerated = outputToTxtFile(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), layoutCrawler);
 			
 			if (fileGenerated) {
-				log("Done, Output written to: " + normalizedOutputFilePath, asynchronous);
+				log("Done, Output written to: " + normalizedOutputFilePath, layoutCrawler.isAsynchronous());
 			} else {
 				return new ResponseTO(false, null, "Output file not generated.", 0);
 			}
@@ -410,7 +419,7 @@ public class SitePageLinkCrawler {
 		return false;
 	}
 	
-	private boolean outputToTxtFile(ConfigTO config, String siteName, String localeString, List<PageTO> pageTOs, String outputFilePath, boolean asynchronous) {
+	private boolean outputToTxtFile(ConfigTO config, String siteName, String localeString, List<PageTO> pageTOs, String outputFilePath, LayoutCrawler layoutCrawler) {
 		PrintWriter printWriter = null;
 		
 		try {
@@ -425,7 +434,7 @@ public class SitePageLinkCrawler {
 			long totalLoginRequiredLinkCount = 0;
 			long totalUnexpectedExternalRedirectLinkCount = 0;
 			
-			if (asynchronous) {
+			if (layoutCrawler.isAsynchronous()) {
 				printWriter.println("Trigger: Site Page Crawler Widget");
 			} else {
 				if (config.isRunAsGuestUser()) {
@@ -436,6 +445,7 @@ public class SitePageLinkCrawler {
 			}
 			
 			printWriter.println("Site Name: " + siteName);
+			printWriter.println("Hostname: " + layoutCrawler.getRelativeUrlPrefix());
 			if (config.isRunAsGuestUser()) {
 				if (config.isUseCurrentUsersLocaleWhenRunAsGuestUser()) {
 					printWriter.println("Locale: " + localeString + " (from Current User)");
@@ -557,10 +567,11 @@ public class SitePageLinkCrawler {
 				pageCount ++;
 			}
 			
+			printWriter.println("**********************************************************************");
+			printWriter.println("");
+			printWriter.println("Total Link Count: " + totalLinkCount);
+			
 			if (config.isValidateLinksOnPages()) {
-				printWriter.println("**********************************************************************");
-				printWriter.println("");
-				printWriter.println("Total Link Count: " + totalLinkCount);
 				printWriter.println("Total Valid Link Count: " + totalValidLinkCount);
 				printWriter.println("Total Invalid Link Count: " + totalInvalidLinkCount);
 				if (config.isSkipExternalLinks()) {

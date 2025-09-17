@@ -11,5 +11,6 @@ Import-Package:\
 Export-Package: \
 	com.mw.site.crawler,\
 	com.mw.site.crawler.config,\
-	com.mw.site.crawler.model
+	com.mw.site.crawler.model,\
+	com.mw.site.crawler.util
 -fixupmessages "Classes found in the wrong directory"; restrict:=error; is:=warning

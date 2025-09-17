@@ -35,6 +35,7 @@ import com.mw.site.crawler.config.InfraConfigTO;
 import com.mw.site.crawler.config.SitePageCrawlerConfiguration;
 import com.mw.site.crawler.config.SitePageCrawlerInfraConfiguration;
 import com.mw.site.crawler.model.ResponseTO;
+import com.mw.site.crawler.util.CrawlerUtil;
 
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -82,7 +83,6 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
     protected void activate(Map<String, Object> properties) throws Exception {		
 		if (_log.isInfoEnabled()) _log.info("Activating...");		
 		
-		_sitePageCrawlerConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerConfiguration.class, properties);	
 		_sitePageCrawlerInfraConfiguration = ConfigurableUtil.createConfigurable(SitePageCrawlerInfraConfiguration.class, properties);
 		
 		_log.info("objectDefinitionERC: " + _sitePageCrawlerInfraConfiguration.objectDefinitionERC());
@@ -123,7 +123,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		long companyId = themeDisplay.getCompanyId();
 		long siteId = themeDisplay.getSiteGroupId();
 
-		String relativeUrlPrefix = getRelativeUrlPrefix(themeDisplay);
+		String relativeUrlPrefix = CrawlerUtil.getRelativeUrlPrefix(themeDisplay);
 		
 		Group group = groupLocalService.fetchGroup(siteId);
 
@@ -135,8 +135,8 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 			
 			if (config.isUseCurrentUsersLocaleWhenRunAsGuestUser()) { // From Current User
 				runAsLocale = themeDisplay.getUser().getLocale();
-			} else { // From Guest User
-				runAsLocale = runAsUser.getLocale();
+			} else { // From Site Settings (or Instance Settings if not set at Site level).
+				runAsLocale = CrawlerUtil.getSiteDefaultLocale(themeDisplay.getSiteGroupId());
 			}
 		} else {
 			runAsUser = themeDisplay.getUser();
@@ -169,7 +169,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		
 		String cookieDomain = themeDisplay.getServerName();
 				
-		LayoutCrawler layoutCrawler = new LayoutCrawler(themeDisplay.getCompanyId(), infraConfig, config.isRunAsGuestUser(), relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(themeDisplay.getCompanyId(), themeDisplay.getSiteGroupId(), infraConfig, config.isRunAsGuestUser(), relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
 		
 		List<Layout> layouts = sitePageLinkCrawler.getPages(config, siteId, true);
 		
@@ -291,18 +291,6 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		return;
 	}
 	
-	private String getRelativeUrlPrefix(ThemeDisplay themeDisplay) {
-		
-		String protocol = themeDisplay.getPortalURL().split(":")[0]; // http or https
-        String host = themeDisplay.getServerName();
-        int port = themeDisplay.getServerPort();
-		
-		String prefix = protocol + "://" + host;
-		if (port != 80 && port != 443) prefix += ":" + port;
-		
-		return prefix;
-	}
-	
 	@Reference(unbind = "-")
 	private SitePageLinkCrawler sitePageLinkCrawler;
 	
@@ -314,9 +302,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 	
 	@Reference(unbind = "-")
 	private UserNotificationEventLocalService userNotificationEventLocalService;
-	
-	private volatile SitePageCrawlerConfiguration _sitePageCrawlerConfiguration;
-	
+		
 	private volatile SitePageCrawlerInfraConfiguration _sitePageCrawlerInfraConfiguration;
 	
     @Reference
@@ -326,7 +312,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
     private ObjectDefinitionLocalService objectDefinitionLocalService;
     
     @Reference
-    private DLAppLocalService dlAppLocalService;    
+    private DLAppLocalService dlAppLocalService;
 	
  	private static final Log _log = LogFactoryUtil.getLog(CrawlerPortletActionCommand.class);	
 }

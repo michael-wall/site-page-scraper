@@ -1,27 +1,11 @@
 package com.mw.crawler.web.portlet;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.mw.crawler.web.constants.CrawlerPortletKeys;
-import com.mw.site.crawler.SitePageLinkCrawler;
-import com.mw.site.crawler.config.ConfigTO;
-
-import java.io.IOException;
-import java.util.Map;
 
 import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael Wall
@@ -42,33 +26,4 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class CrawlerPortlet extends MVCPortlet {
 	
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		if (_log.isInfoEnabled()) _log.info("Activating...");
-	}	
-	
-	@Override
-	public void doView(RenderRequest renderRequest, RenderResponse renderResponse) throws IOException, PortletException {
-		ThemeDisplay themeDisplay = (ThemeDisplay) renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
-		
-		if (Validator.isNull(themeDisplay.getUser()) || themeDisplay.getUser().isGuestUser()) {
-			include("/noAccess.jsp", renderRequest, renderResponse);
-			
-			return;
-		}
-
-		ConfigTO config = sitePageLinkCrawler.getDefaultConfiguration();
-
-		renderRequest.setAttribute("sitePageCrawlerConfig", config);
-
-		super.doView(renderRequest, renderResponse);
-		
-		return;
-	}
-	
-	@Reference(unbind = "-")
-	private SitePageLinkCrawler sitePageLinkCrawler;	
-	
- 	private static final Log _log = LogFactoryUtil.getLog(CrawlerPortlet.class);		
 }
