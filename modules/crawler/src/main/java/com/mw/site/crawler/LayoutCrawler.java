@@ -18,6 +18,8 @@ import com.mw.site.crawler.util.CrawlerUtil;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,27 +43,27 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
 
 public class LayoutCrawler {
-	public static final int MAX_REDIRECTS = 5;
 	
     /**
      * Used by web
      */
-    public LayoutCrawler(long companyId, long siteGroupId, InfraConfigTO infraConfig, boolean isRunAsGuestUser, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, HttpServletRequest httpRequest, String cookieDomain, User user, Locale locale) {
+    public LayoutCrawler(long companyId, long siteGroupId, InfraConfigTO infraConfig, boolean isRunAsGuestUser, String origin, HttpServletRequest httpRequest, String cookieDomain, User user, Locale locale) {
         _infraConfig = infraConfig;
     	
     	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
     	
         _httpClient = httpClientBuilder.setUserAgent(_infraConfig.getCrawlerUserAgent()).build();
         
-        _relativeUrlPrefix = relativeUrlPrefix;
+        _origin = origin;
 		try {
-			_relativeUrlPrefixUri = new URI(_relativeUrlPrefix);
+			_originUri = new URI(_origin);
 		} catch (URISyntaxException e) {
-			_log.error("Exception parsing URI from _relativeUrlPrefix for " + _relativeUrlPrefix);
+			_log.error("Exception parsing URI from _origin for " + _origin);
 		}
-		_host = _relativeUrlPrefixUri.getHost();
-        _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
-        _privateLayoutUrlPrefix = privateLayoutUrlPrefix;
+		_originHost = _originUri.getHost();
+		String siteFriendlyUrl = CrawlerUtil.getSiteFriendlyURL(siteGroupId);
+		_sitePublicUrlPrefix = CrawlerUtil.getSitePublicUrlPrefix(origin, siteFriendlyUrl);
+		_sitePrivateUrlPrefix = CrawlerUtil.getSitePrivateUrlPrefix(origin, siteFriendlyUrl);
         
         _companyId = companyId;
         _siteGroupId = siteGroupId;
@@ -73,32 +75,57 @@ public class LayoutCrawler {
         
         _asynchronous = true;
         
+        _log.info("CookieDomain: " + cookieDomain);
+        
         if (isRunAsGuestUser) {
         	_setHttpClientContextGuest(cookieDomain, locale);
         } else {
-        	_setHttpClientContextCurrentUser(httpRequest, cookieDomain, locale);    	
+            // Only applicable when isRunAsGuestUser is false
+        	ArrayList<String> cookieDomains = new ArrayList<String>();
+        	cookieDomains.add(cookieDomain);
+
+            
+            //Add additional cookie domain if the current domain has a Site Virtual Host.
+            // If public, add the private and vice versa...
+            VirtualHostTO currentVirtualHost = CrawlerUtil.isSiteVirtualHost(_siteVirtualHosts, _originHost);
+
+            if (Validator.isNotNull(currentVirtualHost)) {
+            	String languageId = currentVirtualHost.getLanguageId();
+            	boolean isPublicVirtualHost = currentVirtualHost.isPublicVirtualHost();
+            	
+            	VirtualHostTO matching = CrawlerUtil.getSiteVirtualHostByTypeByLanguageId(_siteVirtualHosts, !isPublicVirtualHost, languageId);
+            	
+            	if (Validator.isNotNull(matching)) {
+            		_log.info("Adding additional cookieDomain: " + matching.getHostName());
+            		
+            		cookieDomains.add(matching.getHostName());
+            	}
+            }
+        	
+        	_setHttpClientContextCurrentUser(httpRequest, cookieDomains, locale);    	
         }
     }	
 
     /**
      * Used by gogo shell sitePageHTMLCrawler:crawlPagesAsUser
      */    
-    public LayoutCrawler(long companyId, long siteGroupId, InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
+    public LayoutCrawler(long companyId, long siteGroupId, InfraConfigTO infraConfig, String origin, String idEnc, String passwordEnc, String cookieDomain, Locale locale) {
     	_infraConfig = infraConfig;
     	
     	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
         _httpClient = httpClientBuilder.setUserAgent(_infraConfig.getCrawlerUserAgent()).build();
         
-        _relativeUrlPrefix = relativeUrlPrefix;
+        _origin = origin;
 		try {
-			_relativeUrlPrefixUri = new URI(_relativeUrlPrefix);
+			_originUri = new URI(_origin);
 		} catch (URISyntaxException e) {
-			_log.error("Exception parsing URI from _relativeUrlPrefix for " + _relativeUrlPrefix);
+			_log.error("Exception parsing URI from _origin for " + _origin);
 		}
-		_host = _relativeUrlPrefixUri.getHost();
-        _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
-        _privateLayoutUrlPrefix = privateLayoutUrlPrefix;
+		_originHost = _originUri.getHost();
+		String siteFriendlyUrl = CrawlerUtil.getSiteFriendlyURL(siteGroupId);
+		_sitePublicUrlPrefix = CrawlerUtil.getSitePublicUrlPrefix(origin, siteFriendlyUrl);
+		_sitePrivateUrlPrefix = CrawlerUtil.getSitePrivateUrlPrefix(origin, siteFriendlyUrl);
         
         _companyId = companyId;
         _siteGroupId = siteGroupId;
@@ -115,21 +142,22 @@ public class LayoutCrawler {
     /**
      * Used by gogo shell sitePageHTMLCrawler:crawlPagesAsGuest
      */   
-    public LayoutCrawler(long companyId, long siteGroupId, InfraConfigTO infraConfig, String relativeUrlPrefix, String publicLayoutUrlPrefix, String cookieDomain, User user, Locale locale) {
+    public LayoutCrawler(long companyId, long siteGroupId, InfraConfigTO infraConfig, String origin, String cookieDomain, User user, Locale locale) {
     	_infraConfig = infraConfig;
 
     	HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
         _httpClient = httpClientBuilder.setUserAgent(_infraConfig.getCrawlerUserAgent()).build();
         
-        _relativeUrlPrefix = relativeUrlPrefix;
+        _origin = origin;
 		try {
-			_relativeUrlPrefixUri = new URI(_relativeUrlPrefix);
+			_originUri = new URI(_origin);
 		} catch (URISyntaxException e) {
-			_log.error("Exception parsing URI from _relativeUrlPrefix for " + _relativeUrlPrefix);
+			_log.error("Exception parsing URI from _origin for " + _origin);
 		}
-		_host = _relativeUrlPrefixUri.getHost();
-        _publicLayoutUrlPrefix = publicLayoutUrlPrefix;
+		_originHost = _originUri.getHost();
+		String siteFriendlyUrl = CrawlerUtil.getSiteFriendlyURL(siteGroupId);
+		_sitePublicUrlPrefix = CrawlerUtil.getSitePublicUrlPrefix(origin, siteFriendlyUrl);
         
         _companyId = companyId;
         _siteGroupId = siteGroupId;
@@ -154,7 +182,7 @@ public class LayoutCrawler {
                     .setConnectTimeout(_infraConfig.getConnectTimeout()) // time to establish connection with the server
                     .setConnectionRequestTimeout(_infraConfig.getConnectionRequestTimeout()) // time to get connection from pool
                     .setSocketTimeout(_infraConfig.getSocketTimeout()) // time waiting for data
-                    .setMaxRedirects(MAX_REDIRECTS) //Default is 50, changing to 3
+                    .setMaxRedirects(_infraConfig.getMaximumRedirects()) //Default is 50, changing...
                     .build();
             
             URI uri = new URI(url);
@@ -166,7 +194,7 @@ public class LayoutCrawler {
             boolean isExternal = false;
 
             if (!uri.isAbsolute()) { //Relative
-            	url = _relativeUrlPrefix + url;
+            	url = _origin + url;
             	
             	if (isRunAsGuest) {
             		if (uri.toString().startsWith(privatePagePrefix)) {
@@ -176,7 +204,7 @@ public class LayoutCrawler {
             } else { // Absolute
             	host = uri.getHost();
             	
-            	isExternal = isExternalURL(host, _host);
+            	isExternal = isExternalURL(host, _originHost);
             	
             	if (isRunAsGuest) {
             		if (uri.getPath().startsWith(privatePagePrefix)) {
@@ -247,7 +275,7 @@ public class LayoutCrawler {
             
             URI finalUrlUri = new URI(finalUrl);
             
-            boolean finalUrlIsExternal = isExternalURL(finalUrlUri.getHost(), _host);
+            boolean finalUrlIsExternal = isExternalURL(finalUrlUri.getHost(), _originHost);
             
             // Started internal, ended external... possibly due to SSO but can't be confirmed...
             if (!isExternal && finalUrlIsExternal) {
@@ -281,9 +309,9 @@ public class LayoutCrawler {
         return responseStringArray;
     }
     
-    private boolean isExternalURL(String host, String relativeUrlPrefixHost) {
+    private boolean isExternalURL(String host, String originHost) {
     	
-    	if (Validator.isNotNull(relativeUrlPrefixHost) && Validator.isNotNull(host) && !host.equalsIgnoreCase(relativeUrlPrefixHost)) {
+    	if (Validator.isNotNull(originHost) && Validator.isNotNull(host) && !host.equalsIgnoreCase(originHost)) {
     		return true;
     	}
     	
@@ -300,13 +328,13 @@ public class LayoutCrawler {
                     .setConnectTimeout(_infraConfig.getConnectTimeout()) // time to establish connection with the server
                     .setConnectionRequestTimeout(_infraConfig.getConnectionRequestTimeout()) // time to get connection from pool
                     .setSocketTimeout(_infraConfig.getSocketTimeout()) // time waiting for data
-                    .setMaxRedirects(MAX_REDIRECTS) //Default is 50, changing to 3
+                    .setMaxRedirects(_infraConfig.getMaximumRedirects()) //Default is 50, changing...
                     .build();        	
         	
             if (layout.isPrivateLayout()) {
-            	layoutFullURL = _privateLayoutUrlPrefix + layout.getFriendlyURL(locale);
+            	layoutFullURL = _sitePrivateUrlPrefix + layout.getFriendlyURL(locale);
             } else {
-            	layoutFullURL = _publicLayoutUrlPrefix + layout.getFriendlyURL(locale);
+            	layoutFullURL = _sitePublicUrlPrefix + layout.getFriendlyURL(locale);
             }
 
             HttpGet httpGet = new HttpGet(layoutFullURL);
@@ -345,6 +373,8 @@ public class LayoutCrawler {
     	if (_httpClientContext != null) return;
 
         CookieStore cookieStore = new BasicCookieStore();
+        
+        _log.info("CookieDomain: " + cookieDomain);
        
         BasicClientCookie autoIdClientCookie =
                 _createClientCookie(CookiesConstants.NAME_ID, idEnc, cookieDomain);
@@ -365,7 +395,7 @@ public class LayoutCrawler {
         _httpClientContext.setCookieStore(cookieStore);
     }
     
-    private void _setHttpClientContextCurrentUser(HttpServletRequest httpRequest, String cookieDomain, Locale locale) {
+    private void _setHttpClientContextCurrentUser(HttpServletRequest httpRequest, ArrayList<String> cookieDomains, Locale locale) {
 
     	if (_httpClientContext != null) return;
 
@@ -384,16 +414,17 @@ public class LayoutCrawler {
         	};
         	
             for (Cookie servletCookie : cookies) {
-            	// This MAY break SSO, so commenting out...
-            	//if (Arrays.asList(requiredCookies).contains(servletCookie.getName())) {            	
-	                BasicClientCookie clientCookie = new BasicClientCookie(servletCookie.getName(), servletCookie.getValue());
-	                clientCookie.setDomain(cookieDomain);
-	                clientCookie.setPath(servletCookie.getPath() != null ? servletCookie.getPath() : "/");
-	                cookieStore.addCookie(clientCookie);
-            	//}
+            	if (Arrays.asList(requiredCookies).contains(servletCookie.getName())) {
+            		for (String cookieDomain: cookieDomains) {
+    	                BasicClientCookie clientCookie = new BasicClientCookie(servletCookie.getName(), servletCookie.getValue());
+    	                clientCookie.setDomain(cookieDomain);
+    	                clientCookie.setPath(servletCookie.getPath() != null ? servletCookie.getPath() : "/");
+    	                cookieStore.addCookie(clientCookie);	
+					}
+            	}
             }
             
-            _log.info("Copied Cookies count: " + cookieStore.getCookies().size());
+            _log.info("New Cookies count: " + cookieStore.getCookies().size());
         }
 
         _httpClientContext = new HttpClientContext();
@@ -430,7 +461,7 @@ public class LayoutCrawler {
     private String getHostSummary(String host) {
     	if (Validator.isNull(host)) return host;
         
-        if (host.equalsIgnoreCase("localhost") && !_host.equalsIgnoreCase("localhost")) {
+        if (host.equalsIgnoreCase("localhost") && !_originHost.equalsIgnoreCase("localhost")) {
         	return host + " (Avoid using localhost in Links...)";
         }
     	
@@ -476,10 +507,18 @@ public class LayoutCrawler {
     	return _asynchronous;
     }
     
-    public String getRelativeUrlPrefix() {
-    	return _relativeUrlPrefix;
+    public String getOrigin() {
+    	return _origin;
     }
     
+    public String getSitePublicUrlPrefix() {
+    	return _sitePublicUrlPrefix;
+    }
+    
+    public String getSitePrivateUrlPrefix() {
+    	return _sitePrivateUrlPrefix;
+    }
+  
     private boolean _asynchronous = false;
     
     private List<VirtualHost> _allVirtualHosts;
@@ -489,12 +528,11 @@ public class LayoutCrawler {
     
     private InfraConfigTO _infraConfig;
 
-    private String _relativeUrlPrefix;
-    private String _publicLayoutUrlPrefix;
-    private String _privateLayoutUrlPrefix;
-    
-    private URI _relativeUrlPrefixUri;
-    private String _host;
+    private String _origin;
+    private URI _originUri;
+    private String _originHost;
+    private String _sitePublicUrlPrefix;
+    private String _sitePrivateUrlPrefix;
  
     private HttpClient _httpClient;
     

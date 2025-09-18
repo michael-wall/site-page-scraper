@@ -9,28 +9,28 @@
 - The syntax and arguments to call the commands are as follows:
 
 ```
-sitePageHTMLCrawler:crawlPagesAsUser "[companyId]" "[siteId]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[privateLayoutUrlPrefix]" "[emailAddress]" "[loginIdEnc]" "[passwordEnc]" "[cookieDomain]"
+sitePageHTMLCrawler:crawlPagesAsUser "[companyId]" "[siteId]" "[origin]" "[emailAddress]" "[loginIdEnc]" "[passwordEnc]" "[cookieDomain]"
 ```
 ```
-sitePageHTMLCrawler:crawlPagesAsGuest "[companyId]" "[siteId]" "[relativeUrlPrefix]" "[publicLayoutUrlPrefix]" "[cookieDomain]"
+sitePageHTMLCrawler:crawlPagesAsGuest "[companyId]" "[siteId]" "[origin]" "[cookieDomain]"
 ```
 
 - For example in Liferay PaaS (with HTTPS):
 
 ```
-sitePageLinkCrawler:crawlPagesAsUser "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "https://webserver-lctmwsitescraper-prd.lfr.cloud/group/mw" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwsitescraper-prd.lfr.cloud"
+sitePageLinkCrawler:crawlPagesAsUser "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "test@liferay.com" "677a746b7976694c6447763272666c7658754f5167413d3d" "6b6467536d6d766b48684e63772f427451596b4e62513d3d" "webserver-lctmwsitescraper-prd.lfr.cloud"
 ```
 ```
-sitePageLinkCrawler:crawlPagesAsGuest "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "https://webserver-lctmwsitescraper-prd.lfr.cloud/web/mw" "webserver-lctmwsitescraper-prd.lfr.cloud"
+sitePageLinkCrawler:crawlPagesAsGuest "23990396268826" "32920" "https://webserver-lctmwsitescraper-prd.lfr.cloud" "webserver-lctmwsitescraper-prd.lfr.cloud"
 ```
 
 - For example in a local dev environment (with HTTP, localhost and port 8080):
 
 ```
-sitePageLinkCrawler:crawlPagesAsUser "20096" "49006" "http://localhost:8080" "http://localhost:8080/web/linktest" "http://localhost:8080/group/linktest" "test@liferay.com" "366b32764248576e783543736e55526e6e57707853773d3d" "3472704e536345712b73575a316c4a6c447a705365673d3d" "localhost"
+sitePageLinkCrawler:crawlPagesAsUser "20096" "49006" "http://localhost:8080" "test@liferay.com" "366b32764248576e783543736e55526e6e57707853773d3d" "3472704e536345712b73575a316c4a6c447a705365673d3d" "localhost"
 ```
 ```
-sitePageLinkCrawler:crawlPagesAsGuest "20096" "49006" "http://localhost:8080" "http://localhost:8080/web/linktest" "localhost"
+sitePageLinkCrawler:crawlPagesAsGuest "20096" "49006" "http://localhost:8080" "localhost"
 ```
 
 Note:
@@ -40,9 +40,7 @@ Note:
 Arguments for crawlPagesAsUser:
 - **companyId**: The companyId of the Virtual Instance that the Site resides in.
 - **siteId**: The siteId of the Site to be crawled - get this from Site Settings > Site Configuration.
-- **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com or http://localhost:8080
-- **publicLayoutUrlPrefix**: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet or http://localhost:8080/web/linktest
-- **privateLayoutUrlPrefix**: The base URL used when accessing the Private Pages of the Site e.g. https://mw.com/group/intranet or http://localhost:8080/group/linktest
+- **origin**: The base URL used when validating relative URLs e.g. https://mw.com or http://localhost:8080
 - **emailAddress**: The email address of the user to log in as. See 'Crawler User Account' section.
 - **loginIdEnc**: The encrypted login ID (email address or screenName) of the user. See 'Crawler User Account' section.
 - **passwordEnc**: The encrypted password of the user. See 'Crawler User Account' section.
@@ -51,8 +49,7 @@ Arguments for crawlPagesAsUser:
 Arguments for crawlPagesAsGuest:
 - **companyId**: The companyId of the Virtual Instance that the Site resides in.
 - **siteId**: The siteId of the Site to be crawled - get this from Site Settings > Site Configuration.
-- **relativeUrlPrefix**: The base URL used when validating relative URLs e.g. https://mw.com or http://localhost:8080
-- **publicLayoutUrlPrefix**: The base URL used when accessing the Public Pages of the Site e.g. https://mw.com/web/intranet or http://localhost:8080/web/linktest
+- **origin**: The base URL used when validating relative URLs e.g. https://mw.com or http://localhost:8080
 - **cookieDomain**: The Cookie Domain to use when setting the GUEST_LANGUAGE_ID cookie for the Guest User. To get the value navigate to the Site and go to Dev Tools > Application > Storage > Cookies and get the 'Domain' value for the GUEST_LANGUAGE_ID cookie.
 
 ## Crawler User Account for crawlPagesAsUser ##

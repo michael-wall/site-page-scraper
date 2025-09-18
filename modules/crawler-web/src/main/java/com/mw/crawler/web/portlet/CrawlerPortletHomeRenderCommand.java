@@ -53,9 +53,11 @@ public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
 			return "/noAccess.jsp";
 		}
         
+		ConfigTO config = sitePageLinkCrawler.getDefaultConfiguration();
+		
         long publicPageCount = layoutLocalService.getLayoutsCount(themeDisplay.getSiteGroupId(), false);
         long privatePageCount = layoutLocalService.getLayoutsCount(themeDisplay.getSiteGroupId(), true);
-		String currentHostname = CrawlerUtil.getRelativeUrlPrefix(themeDisplay);
+		String origin = CrawlerUtil.getOrigin(themeDisplay);
 		String currentUserLocaleLabel = themeDisplay.getUser().getLocale().toString();
 		String defaultLocaleLabel = CrawlerUtil.getSiteDefaultLocale(themeDisplay.getSiteGroupId()).toString();
 	
@@ -69,28 +71,18 @@ public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
 			if (!vh.isPublicVirtualHost()) privateVirtualHostCount ++;
 		}
 		
-		
-		if (publicVirtualHostCount > 0) {
-			renderRequest.setAttribute("hasPublicVirtualHosts", true);	
-		} else {
-			renderRequest.setAttribute("hasPublicVirtualHosts", false);
-		}
-		
-		if (privateVirtualHostCount > 0) {
-			renderRequest.setAttribute("hasPrivateVirtualHosts", true);	
-		} else {
-			renderRequest.setAttribute("hasPrivateVirtualHosts", false);
-		}		
-		
-		ConfigTO config = sitePageLinkCrawler.getDefaultConfiguration();
-
+		renderRequest.setAttribute("publicVirtualHostCount", publicVirtualHostCount);	
+		renderRequest.setAttribute("privateVirtualHostCount", privateVirtualHostCount);	
+	
 		renderRequest.setAttribute("publicPageCount", publicPageCount);
 		renderRequest.setAttribute("privatePageCount", privatePageCount);
-		renderRequest.setAttribute("currentHostname", currentHostname);
+		renderRequest.setAttribute("origin", origin);
 		renderRequest.setAttribute("currentUserLocaleLabel", currentUserLocaleLabel);
 		renderRequest.setAttribute("defaultLocaleLabel", defaultLocaleLabel);
 		renderRequest.setAttribute("sitePageCrawlerConfig", config);
 
+		
+		
 		return "/crawler.jsp";
 	}
 	

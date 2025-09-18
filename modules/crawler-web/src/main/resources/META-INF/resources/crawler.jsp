@@ -1,11 +1,11 @@
 <%@ include file="./init.jsp" %>
 
 <%
-boolean hasPublicVirtualHosts = (boolean) request.getAttribute("hasPublicVirtualHosts");
-boolean hasPrivateVirtualHosts = (boolean) request.getAttribute("hasPrivateVirtualHosts");
+int publicVirtualHostCount = (int) request.getAttribute("publicVirtualHostCount");
+int privateVirtualHostCount = (int) request.getAttribute("privateVirtualHostCount");
 long publicPageCount = (long) request.getAttribute("publicPageCount");
 long privatePageCount = (long) request.getAttribute("privatePageCount");
-String currentHostname = (String) request.getAttribute("currentHostname");
+String origin = (String) request.getAttribute("origin");
 String currentUserLocaleLabel = (String) request.getAttribute("currentUserLocaleLabel");
 String defaultLocaleLabel = (String) request.getAttribute("defaultLocaleLabel");
 ConfigTO sitePageCrawlerConfig = (ConfigTO)request.getAttribute("sitePageCrawlerConfig");
@@ -22,24 +22,24 @@ ConfigTO sitePageCrawlerConfig = (ConfigTO)request.getAttribute("sitePageCrawler
 				<br />
 				<strong><liferay-ui:message key="site-page-crawler-heading" /></strong><br /><br />
 				<c:choose>
-					<c:when test="<%= hasPublicVirtualHosts %>">
-						<strong><liferay-ui:message key="site-public-page-count-is-x-and-the-site-has-one-or-more-public-page-virtual-hosts-defined" arguments="<%= new Object[] {publicPageCount} %>" translateArguments="false" /></strong><br />
+					<c:when test="<%= publicVirtualHostCount > 0 %>">
+						<strong><liferay-ui:message key="site-public-page-count-is-x-and-the-site-has-x-public-page-virtual-hosts-defined" arguments="<%= new Object[] {publicPageCount, publicVirtualHostCount} %>" translateArguments="false" /></strong><br />
 					</c:when>
 					<c:otherwise>
 						<strong><liferay-ui:message key="site-public-page-count-is-x" arguments="<%= new Object[] {publicPageCount} %>" translateArguments="false" /></strong><br />
 					</c:otherwise>
 				</c:choose>
 				<c:choose>
-					<c:when test="<%= hasPrivateVirtualHosts %>">
-						<strong><liferay-ui:message key="site-private-page-count-is-x-and-the-site-has-one-or-more-private-page-virtual-hosts-defined" arguments="<%= new Object[] {privatePageCount} %>" translateArguments="false" /></strong><br />
+					<c:when test="<%= privateVirtualHostCount > 0 %>">
+						<strong><liferay-ui:message key="site-private-page-count-is-x-and-the-site-has-x-private-page-virtual-hosts-defined" arguments="<%= new Object[] {privatePageCount, privateVirtualHostCount} %>" translateArguments="false" /></strong><br />
 					</c:when>
 					<c:otherwise>
 						<strong><liferay-ui:message key="site-private-page-count-is-x" arguments="<%= new Object[] {privatePageCount} %>" translateArguments="false" /></strong><br />
 					</c:otherwise>
 				</c:choose>
-				<strong><liferay-ui:message key="the-tool-will-run-with-the-current-hostname-of-x" arguments="<%= new Object[] {currentHostname} %>" translateArguments="false" /></strong><br />
-				<c:if test="<%= hasPrivateVirtualHosts && hasPrivateVirtualHosts %>">
-						<strong><liferay-ui:message key="consider-running-the-tool-separately-for-the-public-and-private-pages-using-the-most-appropriate-hostname-for-each" arguments="<%= new Object[] {currentHostname} %>" translateArguments="false" /></strong><br />
+				<strong><liferay-ui:message key="the-tool-will-run-with-the-current-hostname-of-x" arguments="<%= new Object[] {origin} %>" translateArguments="false" /></strong><br />
+				<c:if test="<%= publicVirtualHostCount > 0 && privateVirtualHostCount > 0 %>">
+						<strong><liferay-ui:message key="consider-running-the-tool-separately-for-the-public-and-private-pages-using-the-most-appropriate-hostname-for-each" arguments="<%= new Object[] {origin} %>" translateArguments="false" /></strong><br />
 				</c:if>
 				<br />
 				<aui:form name="articleIdForm" action="${crawlPagesActionURL}" method="POST" autocomplete="off">

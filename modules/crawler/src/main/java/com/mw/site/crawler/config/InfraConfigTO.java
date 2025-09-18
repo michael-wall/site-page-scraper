@@ -11,14 +11,16 @@ public class InfraConfigTO implements Serializable {
 	private int connectTimeout = SitePageCrawlerInfraConfiguration.DEFAULT_TIMEOUT;
 	private int connectionRequestTimeout = SitePageCrawlerInfraConfiguration.DEFAULT_TIMEOUT;
 	private int socketTimeout = SitePageCrawlerInfraConfiguration.DEFAULT_TIMEOUT;
+	private int maximumRedirects = SitePageCrawlerInfraConfiguration.DEFAULT_MAXIMUM_REDIRECTS;
 
-	public InfraConfigTO(String crawlerUserAgent, int connectTimeout, int connectionRequestTimeout, int socketTimeout) {
+	public InfraConfigTO(String crawlerUserAgent, int connectTimeout, int connectionRequestTimeout, int socketTimeout, int maximumRedirects) {
 		super();
 		
 		this.crawlerUserAgent = crawlerUserAgent;
 		this.connectTimeout = connectTimeout;
 		this.connectionRequestTimeout = connectionRequestTimeout;
 		this.socketTimeout = socketTimeout;
+		this.maximumRedirects = maximumRedirects;
 	}
 	
 	public String getCrawlerUserAgent() {
@@ -43,5 +45,11 @@ public class InfraConfigTO implements Serializable {
 		if (socketTimeout <=0) return SitePageCrawlerInfraConfiguration.DEFAULT_TIMEOUT;
 		
 		return socketTimeout;
+	}
+	
+	public int getMaximumRedirects() {
+		if (maximumRedirects <=0) return SitePageCrawlerInfraConfiguration.DEFAULT_MAXIMUM_REDIRECTS;
+		
+		return maximumRedirects;
 	}
 }

@@ -123,7 +123,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		long companyId = themeDisplay.getCompanyId();
 		long siteId = themeDisplay.getSiteGroupId();
 
-		String relativeUrlPrefix = CrawlerUtil.getRelativeUrlPrefix(themeDisplay);
+		String origin = CrawlerUtil.getOrigin(themeDisplay);
 		
 		Group group = groupLocalService.fetchGroup(siteId);
 
@@ -159,17 +159,9 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 		
-		String siteFriendlyUrl = group.getFriendlyURL();
-		
-		String publicPrefix = PortalUtil.getPathFriendlyURLPublic();
-        String privatePrefix = PortalUtil.getPathFriendlyURLPrivateGroup();
-		
-		String publicLayoutUrlPrefix = relativeUrlPrefix + publicPrefix + siteFriendlyUrl;
-		String privateLayoutUrlPrefix = relativeUrlPrefix + privatePrefix + siteFriendlyUrl;
-		
 		String cookieDomain = themeDisplay.getServerName();
 				
-		LayoutCrawler layoutCrawler = new LayoutCrawler(themeDisplay.getCompanyId(), themeDisplay.getSiteGroupId(), infraConfig, config.isRunAsGuestUser(), relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, httpRequest, cookieDomain, user, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(themeDisplay.getCompanyId(), themeDisplay.getSiteGroupId(), infraConfig, config.isRunAsGuestUser(), origin, httpRequest, cookieDomain, user, locale);
 		
 		List<Layout> layouts = sitePageLinkCrawler.getPages(config, siteId, true);
 		
@@ -190,7 +182,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		            try {
 		            	_log.info("Background Crawler Started for Site " + siteName + " for " + loggedInFullName);
 		            	
-		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPagesWeb(config, companyId, group, relativeUrlPrefix, user, locale, layoutCrawler, layouts);
+		            	ResponseTO responseTO = sitePageLinkCrawler.crawlPagesWeb(config, companyId, group, origin, user, locale, layoutCrawler, layouts);
 		            		            		
 		            	ObjectEntry objectEntry = null;
 		            	String objectDefinitionLabel = null;

@@ -10,6 +10,7 @@ import aQute.bnd.annotation.metatype.Meta.Type;
 public interface SitePageCrawlerInfraConfiguration {
 	public static final String PID = "com.mw.site.crawler.config.SitePageCrawlerInfraConfiguration";
 	public static final int DEFAULT_TIMEOUT = 10000;
+	public static final int DEFAULT_MAXIMUM_REDIRECTS = 5;
 	
 	public static final String DEFAULT_CRAWLER_USER_AGENT = "Liferay Site Page Crawler";
 	
@@ -29,8 +30,11 @@ public interface SitePageCrawlerInfraConfiguration {
 	public int connectTimeout();
 	
 	@Meta.AD(deflt = "" + DEFAULT_TIMEOUT, required = false, type = Type.String, name = "field.connectionRequestTimeout.name", description = "field.connectionRequestTimeout.desc")
-	public int connectionRequestTimeout();	
+	public int connectionRequestTimeout();
 	
 	@Meta.AD(deflt = "" + DEFAULT_TIMEOUT, required = false, type = Type.String, name = "field.socketTimeout.name", description = "field.socketTimeout.desc")
 	public int socketTimeout();
+	
+	@Meta.AD(deflt = "" + DEFAULT_MAXIMUM_REDIRECTS, required = false, type = Type.String, name = "field.maximumRedirects.name", description = "field.maximumRedirects.desc")
+	public int maximumRedirects();
 }

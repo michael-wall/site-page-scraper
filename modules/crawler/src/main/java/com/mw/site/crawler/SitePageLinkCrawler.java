@@ -78,26 +78,29 @@ public class SitePageLinkCrawler {
 		_log.info("connectTimeout: " + _sitePageCrawlerInfraConfiguration.connectTimeout());
 		_log.info("connectionRequestTimeout: " + _sitePageCrawlerInfraConfiguration.connectionRequestTimeout());
 		_log.info("socketTimeout: " + _sitePageCrawlerInfraConfiguration.socketTimeout());
+		_log.info("maximumRedirects: " + _sitePageCrawlerInfraConfiguration.maximumRedirects());
 	}
 	
     /**
      * Used by web
      */	
-	public ResponseTO crawlPagesWeb(ConfigTO config, long companyId, Group group, String relativeUrlPrefix, User user, Locale locale, LayoutCrawler layoutCrawler, List<Layout> layouts) {
+	public ResponseTO crawlPagesWeb(ConfigTO config, long companyId, Group group, String origin, User user, Locale locale, LayoutCrawler layoutCrawler, List<Layout> layouts) {
 		_log.info("starting crawlPagesWeb");
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("Site GroupId: " + group.getGroupId());
 		_log.info("Locale: " + locale);
-		_log.info("RelativeUrlPrefix: " + relativeUrlPrefix);
+		_log.info("Origin: " + origin);
+		_log.info("SitePublicUrlPrefix: " + layoutCrawler.getSitePublicUrlPrefix());
+		_log.info("SitePrivateUrlPrefix: " + layoutCrawler.getSitePrivateUrlPrefix());
 		
-		return crawlPages(config, relativeUrlPrefix, user, locale, group, layoutCrawler, layouts);
+		return crawlPages(config, origin, user, locale, group, layoutCrawler, layouts);
 	}
 
     /**
      * Used by gogo shell sitePageHTMLCrawler:crawlPagesAsUser
      */   	
-	public void crawlPagesAsUser(String companyIdString, String siteIdString, String relativeUrlPrefix, String publicLayoutUrlPrefix, String privateLayoutUrlPrefix, String emailAddress, String loginIdEnc, String passwordEnc, String cookieDomain) {
+	public void crawlPagesAsUser(String companyIdString, String siteIdString, String origin, String emailAddress, String loginIdEnc, String passwordEnc, String cookieDomain) {
 		_log.info("starting crawlPagesAsUser");
 		
 		long companyId = Long.valueOf(companyIdString);
@@ -105,9 +108,7 @@ public class SitePageLinkCrawler {
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("Site GroupId: " + siteId);
-		_log.info("relativeUrlPrefix: " + relativeUrlPrefix);
-		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
-		_log.info("PrivateLayoutURLPrefix: " + privateLayoutUrlPrefix);
+		_log.info("Origin: " + origin);
 		_log.info("EmailAddress: " + emailAddress);
 		_log.info("LoginIdEnc: " + loginIdEnc);
 		_log.info("PasswordEnc: " + passwordEnc);
@@ -146,17 +147,20 @@ public class SitePageLinkCrawler {
 		InfraConfigTO infraConfig = getInfraConfiguration();
 		ConfigTO config = getDefaultConfiguration(false, false);
 		
-		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, privateLayoutUrlPrefix, loginIdEnc, passwordEnc, cookieDomain, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, origin, loginIdEnc, passwordEnc, cookieDomain, locale);
+		
+		_log.info("SitePublicUrlPrefix: " + layoutCrawler.getSitePublicUrlPrefix());
+		_log.info("SitePrivateUrlPrefix: " + layoutCrawler.getSitePrivateUrlPrefix());
 		
 		List<Layout> layouts = getPages(config, siteId, false);
 		
-		crawlPages(config, relativeUrlPrefix, user, locale, group, layoutCrawler, layouts);
+		crawlPages(config, origin, user, locale, group, layoutCrawler, layouts);
 	}
 	
     /**
      * Used by gogo shell sitePageHTMLCrawler:crawlPagesAsGuest
      */  	
-	public void crawlPagesAsGuest(String companyIdString, String siteIdString, String relativeUrlPrefix, String publicLayoutUrlPrefix, String cookieDomain) {
+	public void crawlPagesAsGuest(String companyIdString, String siteIdString, String origin, String cookieDomain) {
 		_log.info("starting crawlPagesAsGuest");
 		
 		long companyId = Long.valueOf(companyIdString);
@@ -164,8 +168,7 @@ public class SitePageLinkCrawler {
 		
 		_log.info("CompanyId: " + companyId);
 		_log.info("Site GroupId: " + siteId);
-		_log.info("RelativeUrlPrefix: " + relativeUrlPrefix);
-		_log.info("PublicLayoutURLPrefix: " + publicLayoutUrlPrefix);
+		_log.info("Origin: " + origin);
 		_log.info("CookieDomain: " + cookieDomain);
 		
 		Company company = companyLocalService.fetchCompany(companyId);
@@ -195,14 +198,16 @@ public class SitePageLinkCrawler {
 		InfraConfigTO infraConfig = getInfraConfiguration();
 		ConfigTO config = getDefaultConfiguration(true, false); // Running from Gogo Shell, this always uses Guest Locale...
 
-		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, relativeUrlPrefix, publicLayoutUrlPrefix, cookieDomain, guestUser, locale);
+		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, origin, cookieDomain, guestUser, locale);
+		
+		_log.info("SitePublicUrlPrefix: " + layoutCrawler.getSitePublicUrlPrefix());
 		
 		List<Layout> layouts = getPages(config, siteId, false);
 		
-		crawlPages(config, relativeUrlPrefix, guestUser, locale, group, layoutCrawler, layouts);
+		crawlPages(config, origin, guestUser, locale, group, layoutCrawler, layouts);
 	}	
 
-	private ResponseTO crawlPages(ConfigTO config, String relativeUrlPrefix, User user, Locale locale, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts) {
+	private ResponseTO crawlPages(ConfigTO config, String origin, User user, Locale locale, Group group, LayoutCrawler layoutCrawler, List<Layout> layouts) {
 		
 		long guestRoleId = getGuestRoleId(user.getCompanyId());
 		
@@ -445,7 +450,7 @@ public class SitePageLinkCrawler {
 			}
 			
 			printWriter.println("Site Name: " + siteName);
-			printWriter.println("Hostname: " + layoutCrawler.getRelativeUrlPrefix());
+			printWriter.println("Hostname: " + layoutCrawler.getOrigin());
 			if (config.isRunAsGuestUser()) {
 				if (config.isUseCurrentUsersLocaleWhenRunAsGuestUser()) {
 					printWriter.println("Locale: " + localeString + " (from Current User)");
@@ -686,7 +691,7 @@ public class SitePageLinkCrawler {
 	}
 	
 	public InfraConfigTO getInfraConfiguration() {
-		InfraConfigTO infraConfig = new InfraConfigTO(_sitePageCrawlerInfraConfiguration.crawlerUserAgent(), _sitePageCrawlerInfraConfiguration.connectTimeout(), _sitePageCrawlerInfraConfiguration.connectionRequestTimeout(), _sitePageCrawlerInfraConfiguration.socketTimeout());
+		InfraConfigTO infraConfig = new InfraConfigTO(_sitePageCrawlerInfraConfiguration.crawlerUserAgent(), _sitePageCrawlerInfraConfiguration.connectTimeout(), _sitePageCrawlerInfraConfiguration.connectionRequestTimeout(), _sitePageCrawlerInfraConfiguration.socketTimeout(), _sitePageCrawlerInfraConfiguration.maximumRedirects());
 
 		return  infraConfig;
 	}

@@ -5,6 +5,7 @@ public class VirtualHostTO {
 	private String hostName;
 	private boolean publicVirtualHost;
 	private String languageId;
+	private boolean defaultLanguage;
 	
 	public String getHostName() {
 		return hostName;
@@ -25,10 +26,17 @@ public class VirtualHostTO {
 		this.publicVirtualHost = publicVirtualHost;
 	}
 	
-	public VirtualHostTO(String hostName, boolean publicVirtualHost, String languageId) {
+	public boolean isDefaultLanguage() {
+		return defaultLanguage;
+	}
+	public void setDefaultLanguage(boolean defaultLanguage) {
+		this.defaultLanguage = defaultLanguage;
+	}
+	public VirtualHostTO(String hostName, boolean publicVirtualHost, String languageId, boolean defaultLanguage) {
 		super();
 		this.hostName = hostName;
 		this.publicVirtualHost = publicVirtualHost;
 		this.languageId = languageId;
+		this.defaultLanguage = defaultLanguage;
 	}
 }
