@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.mw.site.crawler.model.VirtualHostTO;
@@ -70,7 +71,7 @@ public class CrawlerUtil {
 		return null;
 	}
 	
-	public static List<VirtualHostTO> getSiteVirtualHosts(long siteGroupId, String defaultLanguageId) {
+	public static List<VirtualHostTO> getCurrentSiteVirtualHosts(long siteGroupId, String defaultLanguageId) {
 		List<VirtualHostTO> virtualHosts = new ArrayList<VirtualHostTO>();
 		
     	List<VirtualHost> liferayVirtualHosts = VirtualHostLocalServiceUtil.getVirtualHosts(QueryUtil.ALL_POS, QueryUtil.ALL_POS);
@@ -92,7 +93,7 @@ public class CrawlerUtil {
     				defaultLanguage = true;
     			}
     			
-        		VirtualHostTO virtualHost = new VirtualHostTO(liferayVirtualHost.getHostname(), !layoutSet.isPrivateLayout(), languageId, defaultLanguage);
+        		VirtualHostTO virtualHost = new VirtualHostTO(liferayVirtualHost.getCompanyId(), layoutSet.getGroupId(), true, liferayVirtualHost.getHostname(), !layoutSet.isPrivateLayout(), languageId, defaultLanguage);
         		
         		virtualHosts.add(virtualHost);
     		}
@@ -103,7 +104,50 @@ public class CrawlerUtil {
     	return virtualHosts;
 	}
 	
-	public static VirtualHostTO isSiteVirtualHost(List<VirtualHostTO> virtualHosts, String host) {
+	public static List<VirtualHostTO> getAllVirtualHosts(String defaultLanguageId) {
+		List<VirtualHostTO> virtualHosts = new ArrayList<VirtualHostTO>();
+		
+    	List<VirtualHost> liferayVirtualHosts = VirtualHostLocalServiceUtil.getVirtualHosts(QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+    	
+    	for (VirtualHost liferayVirtualHost: liferayVirtualHosts) {
+    		LayoutSet layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(liferayVirtualHost.getLayoutSetId());
+
+    		if (Validator.isNotNull(layoutSet)) {
+    			String languageId = liferayVirtualHost.getLanguageId();
+    			
+    			boolean defaultLanguage = false;
+    			
+    			//If it uses 'Default Language' on Site Settings > Site Configuration > Site URL > Language
+    			if (Validator.isNull(liferayVirtualHost.getLanguageId())) {
+    				languageId = defaultLanguageId;
+    				
+    				defaultLanguage = true;
+    			} else if (liferayVirtualHost.getLanguageId().equalsIgnoreCase(defaultLanguageId)) { //Explictly set...
+    				defaultLanguage = true;
+    			}
+
+        		VirtualHostTO virtualHost = new VirtualHostTO(liferayVirtualHost.getCompanyId(), layoutSet.getGroupId(), true, liferayVirtualHost.getHostname(), !layoutSet.isPrivateLayout(), languageId, defaultLanguage);
+        		
+        		virtualHosts.add(virtualHost);
+    		} else {
+    			boolean defaultLanguage = false;
+    			
+    			Locale locale = LocaleUtil.getDefault();
+    			
+    			if (locale.toString().equalsIgnoreCase(defaultLanguageId)) defaultLanguage = true;
+    			
+        		VirtualHostTO virtualHost = new VirtualHostTO(liferayVirtualHost.getCompanyId(), 0, false, liferayVirtualHost.getHostname(), false, locale.toString(), defaultLanguage);
+        		
+        		virtualHosts.add(virtualHost);
+    		}
+    	}
+    	
+    	virtualHosts.sort(Comparator.comparing(VirtualHostTO::getHostName, String.CASE_INSENSITIVE_ORDER));    	
+		
+    	return virtualHosts;
+	}	
+	
+	public static VirtualHostTO isCurrentSiteVirtualHost(List<VirtualHostTO> virtualHosts, String host) {
 		
 		if (Validator.isNull(virtualHosts) || virtualHosts.isEmpty()) return null;
     	
@@ -113,6 +157,18 @@ public class CrawlerUtil {
 		
     	return null;
 	}	
+	
+	public static boolean isPrivateSiteVirtualHost(List<VirtualHostTO> virtualHosts, String host) {
+		
+		if (Validator.isNull(virtualHosts) || virtualHosts.isEmpty() || Validator.isNull(host)) return false;
+    	
+    	for (VirtualHostTO virtualHost: virtualHosts) {
+    		if (virtualHost.getHostName().equalsIgnoreCase(host) && virtualHost.isSiteVirtualHost() && !virtualHost.isPublicVirtualHost()) return true;
+    	}
+		
+    	return false;
+	}	
+		
 	
 	public static VirtualHostTO getSiteVirtualHostByTypeByLanguageId(List<VirtualHostTO> virtualHosts, boolean isPublicVirtualHost, String languageId) {
 		

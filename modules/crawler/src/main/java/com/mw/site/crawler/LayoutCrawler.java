@@ -1,13 +1,10 @@
 package com.mw.site.crawler;
 
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.VirtualHost;
-import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -70,8 +67,8 @@ public class LayoutCrawler {
         
         _defaultLanguageId = CrawlerUtil.getSiteDefaultLocale(siteGroupId).toString();
         
-        _allVirtualHosts = getAllVirtualHosts();
-        _siteVirtualHosts = getSiteVirtualHosts(_siteGroupId, _defaultLanguageId);
+        _allVirtualHosts = getAllVirtualHosts(_defaultLanguageId);
+        _currentSiteVirtualHosts = getCurrentSiteVirtualHosts(_siteGroupId, _defaultLanguageId);
         
         _asynchronous = true;
         
@@ -87,13 +84,13 @@ public class LayoutCrawler {
             
             //Add additional cookie domain if the current domain has a Site Virtual Host.
             // If public, add the private and vice versa...
-            VirtualHostTO currentVirtualHost = CrawlerUtil.isSiteVirtualHost(_siteVirtualHosts, _originHost);
+            VirtualHostTO currentVirtualHost = CrawlerUtil.isCurrentSiteVirtualHost(_currentSiteVirtualHosts, _originHost);
 
             if (Validator.isNotNull(currentVirtualHost)) {
             	String languageId = currentVirtualHost.getLanguageId();
             	boolean isPublicVirtualHost = currentVirtualHost.isPublicVirtualHost();
             	
-            	VirtualHostTO matching = CrawlerUtil.getSiteVirtualHostByTypeByLanguageId(_siteVirtualHosts, !isPublicVirtualHost, languageId);
+            	VirtualHostTO matching = CrawlerUtil.getSiteVirtualHostByTypeByLanguageId(_currentSiteVirtualHosts, !isPublicVirtualHost, languageId);
             	
             	if (Validator.isNotNull(matching)) {
             		_log.info("Adding additional cookieDomain: " + matching.getHostName());
@@ -131,8 +128,8 @@ public class LayoutCrawler {
         _siteGroupId = siteGroupId;
         _defaultLanguageId = CrawlerUtil.getSiteDefaultLocale(siteGroupId).toString();
         
-        _allVirtualHosts = getAllVirtualHosts();
-        _siteVirtualHosts = getSiteVirtualHosts(_siteGroupId, _defaultLanguageId);
+        _allVirtualHosts = getAllVirtualHosts(_defaultLanguageId);
+        _currentSiteVirtualHosts = getCurrentSiteVirtualHosts(_siteGroupId, _defaultLanguageId);
         
         _asynchronous = false;
         
@@ -163,8 +160,8 @@ public class LayoutCrawler {
         _siteGroupId = siteGroupId;
         _defaultLanguageId = CrawlerUtil.getSiteDefaultLocale(siteGroupId).toString();
         
-        _allVirtualHosts = getAllVirtualHosts();
-        _siteVirtualHosts = getSiteVirtualHosts(_siteGroupId, _defaultLanguageId);
+        _allVirtualHosts = getAllVirtualHosts(_defaultLanguageId);
+        _currentSiteVirtualHosts = getCurrentSiteVirtualHosts(_siteGroupId, _defaultLanguageId);
         
         _asynchronous = false;
 
@@ -197,7 +194,7 @@ public class LayoutCrawler {
             	url = _origin + url;
             	
             	if (isRunAsGuest) {
-            		if (uri.toString().startsWith(privatePagePrefix)) {
+            		if (uri.toString().startsWith(privatePagePrefix)) { //Relative so don't do private host check... 
             			skipAsPrivatePage = true;
             		}
             	}
@@ -207,7 +204,7 @@ public class LayoutCrawler {
             	isExternal = isExternalURL(host, _originHost);
             	
             	if (isRunAsGuest) {
-            		if (uri.getPath().startsWith(privatePagePrefix)) {
+            		if (uri.getPath().startsWith(privatePagePrefix) || CrawlerUtil.isPrivateSiteVirtualHost(_allVirtualHosts, host)) { //Absolute so do private site virtual host check...
             			skipAsPrivatePage = true;
             		}
             	}
@@ -465,7 +462,7 @@ public class LayoutCrawler {
         	return host + " (Avoid using localhost in Links...)";
         }
     	
-        for (VirtualHostTO vh: _siteVirtualHosts) {
+        for (VirtualHostTO vh: _currentSiteVirtualHosts) {
 			if (vh.getHostName().equalsIgnoreCase(host)) {
 				if (vh.isPublicVirtualHost()) {
 					return host + " (Public Page Virtual Host for this Site for locale " + vh.getLanguageId() + ")";
@@ -476,10 +473,10 @@ public class LayoutCrawler {
 		}
         
         //Fallback to wider scope...
-        for (VirtualHost vh: _allVirtualHosts) {
-			if (vh.getHostname().equalsIgnoreCase(host) && vh.getCompanyId() == _companyId) {
+        for (VirtualHostTO vh: _allVirtualHosts) {
+			if (vh.getHostName().equalsIgnoreCase(host) && vh.getCompanyId() == _companyId) {
 				return host + " (Virtual Host in this Virtual Instance.)";
-			} else if (vh.getHostname().equalsIgnoreCase(host)) {
+			} else if (vh.getHostName().equalsIgnoreCase(host)) {
 				return host + " (Virtual Host in other Virtual Instance.)";
 			}
 		}
@@ -487,18 +484,18 @@ public class LayoutCrawler {
         return host;
     }
     
-    private List<VirtualHost> getAllVirtualHosts() {
+    private List<VirtualHostTO> getAllVirtualHosts(String defaultLanguageId) {
     	
-    	//ALL not just current company
-    	List<VirtualHost> virtualHosts = VirtualHostLocalServiceUtil.getVirtualHosts(QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+    	//ALL not just current company or site    	
+    	List<VirtualHostTO> virtualHosts = CrawlerUtil.getAllVirtualHosts(defaultLanguageId);
     	
     	return virtualHosts;
     }
     
-    private List<VirtualHostTO> getSiteVirtualHosts(long siteGroupId, String defaultLanguageId) {
+    private List<VirtualHostTO> getCurrentSiteVirtualHosts(long siteGroupId, String defaultLanguageId) {
     	
     	//Just this Site
-    	List<VirtualHostTO> virtualHosts = CrawlerUtil.getSiteVirtualHosts(siteGroupId, defaultLanguageId);
+    	List<VirtualHostTO> virtualHosts = CrawlerUtil.getCurrentSiteVirtualHosts(siteGroupId, defaultLanguageId);
     	
     	return virtualHosts;
     }
@@ -521,8 +518,8 @@ public class LayoutCrawler {
   
     private boolean _asynchronous = false;
     
-    private List<VirtualHost> _allVirtualHosts;
-    private List<VirtualHostTO> _siteVirtualHosts;
+    private List<VirtualHostTO> _allVirtualHosts;
+    private List<VirtualHostTO> _currentSiteVirtualHosts;
 
     private HttpClientContext _httpClientContext;   
     

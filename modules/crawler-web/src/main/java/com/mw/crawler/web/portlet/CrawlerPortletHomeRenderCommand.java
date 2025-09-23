@@ -61,7 +61,7 @@ public class CrawlerPortletHomeRenderCommand implements MVCRenderCommand {
 		String currentUserLocaleLabel = themeDisplay.getUser().getLocale().toString();
 		String defaultLocaleLabel = CrawlerUtil.getSiteDefaultLocale(themeDisplay.getSiteGroupId()).toString();
 	
-		List<VirtualHostTO> virtualHosts = CrawlerUtil.getSiteVirtualHosts(themeDisplay.getSiteGroupId(), defaultLocaleLabel);
+		List<VirtualHostTO> virtualHosts = CrawlerUtil.getCurrentSiteVirtualHosts(themeDisplay.getSiteGroupId(), defaultLocaleLabel);
 		
 		int publicVirtualHostCount = 0;
 		int privateVirtualHostCount = 0;

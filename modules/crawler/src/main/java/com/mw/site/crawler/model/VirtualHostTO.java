@@ -2,11 +2,34 @@ package com.mw.site.crawler.model;
 
 public class VirtualHostTO {
 
+	private long companyId;
+	private long siteGroupId;
+	private boolean isSiteVirtualHost;
 	private String hostName;
 	private boolean publicVirtualHost;
 	private String languageId;
 	private boolean defaultLanguage;
 	
+	public long getCompanyId() {
+		return companyId;
+	}
+	public void setCompanyId(long companyId) {
+		this.companyId = companyId;
+	}
+	
+	public long getSiteGroupId() {
+		return siteGroupId;
+	}
+	public void setSiteGroupId(long siteGroupId) {
+		this.siteGroupId = siteGroupId;
+	}
+	
+	public boolean isSiteVirtualHost() {
+		return isSiteVirtualHost;
+	}
+	public void setSiteVirtualHost(boolean isSiteVirtualHost) {
+		this.isSiteVirtualHost = isSiteVirtualHost;
+	}
 	public String getHostName() {
 		return hostName;
 	}
@@ -32,8 +55,12 @@ public class VirtualHostTO {
 	public void setDefaultLanguage(boolean defaultLanguage) {
 		this.defaultLanguage = defaultLanguage;
 	}
-	public VirtualHostTO(String hostName, boolean publicVirtualHost, String languageId, boolean defaultLanguage) {
+	public VirtualHostTO(long companyId, long siteGroupId, boolean isSiteVirtualHost, String hostName, boolean publicVirtualHost, String languageId, boolean defaultLanguage) {
 		super();
+		
+		this.companyId = companyId;
+		this.siteGroupId = siteGroupId;
+		this.isSiteVirtualHost = isSiteVirtualHost;
 		this.hostName = hostName;
 		this.publicVirtualHost = publicVirtualHost;
 		this.languageId = languageId;
