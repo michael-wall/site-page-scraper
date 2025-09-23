@@ -47,4 +47,13 @@ public class LinkTO implements Serializable{
 		this.statusCode = statusCode;
 		this.statusMessage = statusMessage;
 	}
+	
+	public boolean isNonExceptionCode() {
+		if (statusCode.equalsIgnoreCase(SKIPPED_EXTERNAL_LINK_STATUS_CODE + "")) return true;
+		if (statusCode.equalsIgnoreCase(SKIPPED_PRIVATE_PAGE_STATUS_CODE + "")) return true;
+		if (statusCode.equalsIgnoreCase(LOGIN_REDIRECT_STATUS_CODE + "")) return true;
+		if (statusCode.equalsIgnoreCase(UNEXPECTED_EXTERNAL_REDIRECT_STATUS_CODE + "")) return true;
+		
+		return false;
+	}
 }

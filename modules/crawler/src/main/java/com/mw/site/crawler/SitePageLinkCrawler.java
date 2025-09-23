@@ -28,10 +28,9 @@ import com.mw.site.crawler.config.SitePageCrawlerInfraConfiguration;
 import com.mw.site.crawler.model.LinkTO;
 import com.mw.site.crawler.model.PageTO;
 import com.mw.site.crawler.model.ResponseTO;
+import com.mw.site.crawler.output.TextFileOutput;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -363,10 +362,21 @@ public class SitePageLinkCrawler {
 
 			String fileName = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + ".txt";
 			String outputFilePath = outputFolderFile.getAbsolutePath() + "/" + fileName;
-
 			Path normalizedOutputFilePath = Paths.get(outputFilePath).normalize();
 			
-			boolean fileGenerated = outputToTxtFile(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), layoutCrawler);
+			TextFileOutput textFileOutput = new TextFileOutput();
+			
+			boolean fileGenerated = textFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), layoutCrawler);
+
+//			String fileNameExcel = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + ".xlsx";
+//			String outputFilePathExcel = outputFolderFile.getAbsolutePath() + "/" + fileNameExcel;
+//			Path normalizedOutputFilePathExcel = Paths.get(outputFilePathExcel).normalize();
+//			
+//			ExcelXLSXFileOutput excelXLSXFileOutput = new ExcelXLSXFileOutput();
+			
+			//_log.info(" calling excel >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+			
+			//boolean excelGenerated = excelXLSXFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePathExcel.toString(), layoutCrawler);
 			
 			if (fileGenerated) {
 				log("Done, Output written to: " + normalizedOutputFilePath, layoutCrawler.isAsynchronous());
@@ -424,186 +434,7 @@ public class SitePageLinkCrawler {
 		return false;
 	}
 	
-	private boolean outputToTxtFile(ConfigTO config, String siteName, String localeString, List<PageTO> pageTOs, String outputFilePath, LayoutCrawler layoutCrawler) {
-		PrintWriter printWriter = null;
-		
-		try {
-			printWriter = new PrintWriter(outputFilePath);
-			
-			long pageCount = 1;
-			long totalLinkCount = 0;
-			long totalValidLinkCount = 0;
-			long totalInvalidLinkCount = 0;
-			long totalSkippedExternalLinkCount = 0;
-			long totalSkippedPrivateLinkCount = 0;
-			long totalLoginRequiredLinkCount = 0;
-			long totalUnexpectedExternalRedirectLinkCount = 0;
-			
-			if (layoutCrawler.isAsynchronous()) {
-				printWriter.println("Trigger: Site Page Crawler Widget");
-			} else {
-				if (config.isRunAsGuestUser()) {
-					printWriter.println("Trigger: crawlPagesAsGuest GoGo Shell Command");
-				} else {
-					printWriter.println("Trigger: crawlPagesAsUser GoGo Shell Command");
-				}
-			}
-			
-			printWriter.println("Site Name: " + siteName);
-			printWriter.println("Hostname: " + layoutCrawler.getOrigin());
-			if (config.isRunAsGuestUser()) {
-				if (config.isUseCurrentUsersLocaleWhenRunAsGuestUser()) {
-					printWriter.println("Locale: " + localeString + " (from Current User)");
-				} else {
-					printWriter.println("Locale: " + localeString + " (from Guest User)");
-				}
-			} else {
-				printWriter.println("Locale: " + localeString);	
-			}
-			printWriter.println("Web Content Display Widget Links Only: " + getLabel(config.isWebContentDisplayWidgetLinksOnly()));
-			printWriter.println("Run as Guest User: " + getLabel(config.isRunAsGuestUser()));
-			if (config.isRunAsGuestUser()) {
-				printWriter.println("Use Current Users Locale when Run as Guest User: " + getLabel(config.isUseCurrentUsersLocaleWhenRunAsGuestUser()));
-				printWriter.println("Include Public Pages: Yes (Overridden)");
-				printWriter.println("Include Private Pages: No (Overridden)");
-			} else {
-				printWriter.println("Include Public Pages: " + getLabel(config.isIncludePublicPages()));
-				printWriter.println("Include Private Pages: " + getLabel(config.isIncludePrivatePages()));				
-			}
-			printWriter.println("Include Hidden Pages: " + getLabel(config.isIncludeHiddenPages()));
-			if (config.isIncludePublicPages()) {
-				printWriter.println("Check Public Page Guest Role View Permission: " + getLabel(config.isCheckPageGuestRoleViewPermission()));	
-			}
-			printWriter.println("Validate Links on Pages: " + getLabel(config.isValidateLinksOnPages()));
-			if (config.isValidateLinksOnPages()) {
-				printWriter.println("Validate Links on Pages > Skip Links using any other hostname: " + getLabel(config.isSkipExternalLinks()));
-			}
-			printWriter.println("");
-			printWriter.println("Page Count: " + pageTOs.size());
-			printWriter.println("");
-			
-			for (PageTO pageTO: pageTOs) {
-				boolean pageHasLinks = false;
-				if (Validator.isNotNull(pageTO.getLinks()) && !pageTO.getLinks().isEmpty()) {
-					pageHasLinks = true;
-				}
-				
-				printWriter.println("**********************************************************************");
-				printWriter.println("[" + pageCount + "] Page Name: " + pageTO.getName());
-				printWriter.println("[" + pageCount + "] Page URL: " + pageTO.getUrl());
-				if (pageTO.isPrivatePage()) {
-					printWriter.println("[" + pageCount + "] Page Type: Private Page");
-				} else {
-					printWriter.println("[" + pageCount + "] Page Type: Public Page");	
-				}
 
-				if (config.isIncludeHiddenPages()) {
-					printWriter.println("[" + pageCount + "] Hidden Page: " + getLabel(pageTO.isHiddenPage()));	
-				}
-				
-				if (!pageTO.isPrivatePage() && config.isCheckPageGuestRoleViewPermission()) {
-					printWriter.println("[" + pageCount + "] Public Page Guest Role View Permission Enabled: " + getLabel(pageTO.getGuestRoleViewPermissionEnabled()));
-				}
-				
-				if (pageHasLinks) {
-					printWriter.println("[" + pageCount + "] Page Link Count: " + pageTO.getLinks().size());
-					
-					totalLinkCount += pageTO.getLinks().size();
-				} else {
-					printWriter.println("[" + pageCount + "] Page Link Count: 0");
-				}
-				
-				if (config.isValidateLinksOnPages() && pageHasLinks) {
-					printWriter.println("[" + pageCount + "] Valid Link Count: " + pageTO.getValidLinkCount());
-					printWriter.println("[" + pageCount + "] Invalid Link Count: " + pageTO.getInvalidLinkCount());
-					printWriter.println("[" + pageCount + "] Skipped Other Hostname Link Count: " + pageTO.getSkippedExternalLinkCount());
-					printWriter.println("[" + pageCount + "] Skipped Private Link Count: " + pageTO.getSkippedPrivateLinkCount());
-					printWriter.println("[" + pageCount + "] Login Required Link Count: " + pageTO.getLoginRequiredLinkCount());
-					printWriter.println("[" + pageCount + "] Unexpected External Redirect Link Count: " + pageTO.getUnexpectedExternalRedirectLinkCount());
-					
-					totalValidLinkCount += pageTO.getValidLinkCount();
-					totalInvalidLinkCount += pageTO.getInvalidLinkCount();
-					totalSkippedExternalLinkCount += pageTO.getSkippedExternalLinkCount();
-					totalSkippedPrivateLinkCount += pageTO.getSkippedPrivateLinkCount();
-					totalLoginRequiredLinkCount += pageTO.getLoginRequiredLinkCount();
-					totalUnexpectedExternalRedirectLinkCount += pageTO.getUnexpectedExternalRedirectLinkCount();
-							
-				}
-				printWriter.println("**********************************************************************");
-				printWriter.println("");
-				
-				List<LinkTO> linkTOs = pageTO.getLinks();
-				
-				long linkCount = 1;
-				
-				if (pageHasLinks) {
-					for (LinkTO linkTO: linkTOs) {
-						printWriter.println("[" + pageCount + "-" + linkCount + "] Link Label: " + linkTO.getLabel());
-						printWriter.println("[" + pageCount + "-" + linkCount + "] Link URL: " + linkTO.getHref());
-						if (config.isValidateLinksOnPages()) {
-							if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
-								printWriter.println("[" + pageCount + "-" + linkCount + "] Link appears to be valid.");
-							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.SKIPPED_EXTERNAL_LINK_STATUS_CODE)) {
-								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());
-							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.SKIPPED_PRIVATE_PAGE_STATUS_CODE)) {
-								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());
-							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.LOGIN_REDIRECT_STATUS_CODE)) {
-								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());
-							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + LinkTO.UNEXPECTED_EXTERNAL_REDIRECT_STATUS_CODE)) {
-								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());						
-							} else {
-								if (Validator.isNotNull(linkTO.getStatusMessage())) {
-									printWriter.println("[" + pageCount + "-" + linkCount + "] Link not verified: " + linkTO.getStatusCode() + ", " + linkTO.getStatusMessage());
-								} else {
-									printWriter.println("[" + pageCount + "-" + linkCount + "] Link not verified: " + linkTO.getStatusCode());	
-								}
-							}
-						}
-						
-						linkCount ++;
-						
-						printWriter.println("");				
-					}					
-				} else {
-					printWriter.println("No links found on the page.");
-					printWriter.println("");
-				}
-				
-				pageCount ++;
-			}
-			
-			printWriter.println("**********************************************************************");
-			printWriter.println("");
-			printWriter.println("Total Link Count: " + totalLinkCount);
-			
-			if (config.isValidateLinksOnPages()) {
-				printWriter.println("Total Valid Link Count: " + totalValidLinkCount);
-				printWriter.println("Total Invalid Link Count: " + totalInvalidLinkCount);
-				if (config.isSkipExternalLinks()) {
-					printWriter.println("Total Skipped Other Hostname Link Count: " + totalSkippedExternalLinkCount);
-				}
-				if (config.isRunAsGuestUser()) {
-					printWriter.println("Total Skipped Private Link Count: " + totalSkippedPrivateLinkCount);
-				}
-				printWriter.println("Total Login Required Link Count Link Count: " + totalLoginRequiredLinkCount);
-				printWriter.println("Total Unexpected Other Hostname Redirect Link Count: " + totalUnexpectedExternalRedirectLinkCount);
-			}
-
-			return true;
-			
-		} catch (FileNotFoundException e) {
-			_log.error(e.getClass() + ": " + e.getMessage(), e);
-		} catch (Exception e) {
-			_log.error(e.getClass() + ": " + e.getMessage(), e);
-		}
-		finally {
-			if (printWriter != null) printWriter.close();
-			
-			printWriter.close();
-		}
-		
-		return false;
-	}
 	
 	private boolean includeLink(Element link) {
 		String label = link.text();
@@ -639,20 +470,6 @@ public class SitePageLinkCrawler {
 		
 		return -1;
 	}
-	
-	private String getLabel(int value) {
-		if (value == -1) return "Unknown";
-		if (value == 0) return "No";
-		if (value == 1) return "Yes";
-		
-		return "Unknown";
- 	}
-	
-	private String getLabel(boolean value) {
-		if (value) return "Yes";
-		
-		return "No";
- 	}
 	
 	private int hasGuestViewPermission(long guestRoleId, Layout layout) {
 		if (guestRoleId == -1 || Validator.isNull(layout)) return -1;

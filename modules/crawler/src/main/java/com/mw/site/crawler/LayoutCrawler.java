@@ -284,8 +284,13 @@ public class LayoutCrawler {
                 return responseStringArray;       
             }
             
-            responseStringArray[0] = "" + statusLine.getStatusCode();
-            responseStringArray[1] = "" + statusLine.getReasonPhrase();
+            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+                responseStringArray[0] = "" + statusLine.getStatusCode();
+                responseStringArray[1] = "Link appears to be valid." + statusLine.getReasonPhrase();
+            } else {
+                responseStringArray[0] = "" + statusLine.getStatusCode();
+                responseStringArray[1] = "" + statusLine.getReasonPhrase();	
+            }
 
             return responseStringArray;
         } catch (Exception e) {
