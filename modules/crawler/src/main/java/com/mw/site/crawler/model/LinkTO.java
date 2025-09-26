@@ -1,6 +1,10 @@
 package com.mw.site.crawler.model;
 
+import com.liferay.portal.kernel.util.Validator;
+
 import java.io.Serializable;
+
+import org.apache.http.HttpStatus;
 
 public class LinkTO implements Serializable{
 	private static final long serialVersionUID = 1L;
@@ -40,6 +44,21 @@ public class LinkTO implements Serializable{
 	public void setStatusMessage(String statusMessage) {
 		this.statusMessage = statusMessage;
 	}
+	
+	public String getOutput() {
+		if (Validator.isNotNull(getStatusCode()) && getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
+			return getStatusMessage();	
+		} else if (Validator.isNotNull(getStatusCode()) && isNonExceptionCode()) {
+			return getStatusMessage();						
+		} else {
+			if (Validator.isNotNull(getStatusMessage())) {
+				return "Link not verified: " + getStatusCode() + ", " + getStatusMessage();
+			} else {
+				return "Link not verified: " + getStatusCode();
+			}
+		}
+	}
+	
 	public LinkTO(String href, String label, String statusCode, String statusMessage) {
 		super();
 		this.href = href;

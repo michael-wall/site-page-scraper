@@ -6,4 +6,13 @@ dependencies {
 	
 	//JSoup for HTML Parsing
 	compileInclude group: 'org.jsoup', name: 'jsoup', version: '1.20.1'
+	
+	//Excel
+	compileInclude (group: 'org.apache.commons', name: 'commons-collections4', version: '4.2'){ transitive = false}
+	compileInclude (group: "org.apache.poi", name: "poi", version: "4.1.0"){ transitive = false}
+	compileInclude (group: "org.apache.poi", name: "poi-ooxml", version: "4.1.0"){ transitive = false}
+	compileInclude (group: 'org.apache.xmlbeans', name: 'xmlbeans', version: '3.0.2'){ transitive = false}
+	compileInclude (group: 'org.apache.commons', name: 'commons-compress', version: '1.21'){ transitive = false}
+	compileInclude (group: 'org.apache.poi', name: 'ooxml-schemas', version: '1.4'){ transitive = false}
+	compileInclude (group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'){ transitive = false}	
 }

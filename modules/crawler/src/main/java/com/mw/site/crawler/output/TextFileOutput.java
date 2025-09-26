@@ -97,18 +97,9 @@ public class TextFileOutput {
 					for (LinkTO linkTO: linkTOs) {
 						printWriter.println("[" + pageCount + "-" + linkCount + "] Link Label: " + linkTO.getLabel());
 						printWriter.println("[" + pageCount + "-" + linkCount + "] Link URL: " + linkTO.getHref());
+			
 						if (config.isValidateLinksOnPages()) {
-							if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
-								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());	
-							} else if (Validator.isNotNull(linkTO.getStatusCode()) && linkTO.isNonExceptionCode()) {
-								printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getStatusMessage());						
-							} else {
-								if (Validator.isNotNull(linkTO.getStatusMessage())) {
-									printWriter.println("[" + pageCount + "-" + linkCount + "] Link not verified: " + linkTO.getStatusCode() + ", " + linkTO.getStatusMessage());
-								} else {
-									printWriter.println("[" + pageCount + "-" + linkCount + "] Link not verified: " + linkTO.getStatusCode());	
-								}
-							}
+							printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getOutput());	
 						}
 						
 						linkCount ++;

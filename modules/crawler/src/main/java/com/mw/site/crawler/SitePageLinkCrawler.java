@@ -28,6 +28,7 @@ import com.mw.site.crawler.config.SitePageCrawlerInfraConfiguration;
 import com.mw.site.crawler.model.LinkTO;
 import com.mw.site.crawler.model.PageTO;
 import com.mw.site.crawler.model.ResponseTO;
+import com.mw.site.crawler.output.ExcelXLSXFileOutput;
 import com.mw.site.crawler.output.TextFileOutput;
 
 import java.io.File;
@@ -368,15 +369,13 @@ public class SitePageLinkCrawler {
 			
 			boolean fileGenerated = textFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), layoutCrawler);
 
-//			String fileNameExcel = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + ".xlsx";
-//			String outputFilePathExcel = outputFolderFile.getAbsolutePath() + "/" + fileNameExcel;
-//			Path normalizedOutputFilePathExcel = Paths.get(outputFilePathExcel).normalize();
-//			
-//			ExcelXLSXFileOutput excelXLSXFileOutput = new ExcelXLSXFileOutput();
+			String fileNameExcel = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + ".xlsx";
+			String outputFilePathExcel = outputFolderFile.getAbsolutePath() + "/" + fileNameExcel;
+			Path normalizedOutputFilePathExcel = Paths.get(outputFilePathExcel).normalize();
 			
-			//_log.info(" calling excel >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-			
-			//boolean excelGenerated = excelXLSXFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePathExcel.toString(), layoutCrawler);
+			ExcelXLSXFileOutput excelXLSXFileOutput = new ExcelXLSXFileOutput();
+					
+			boolean excelGenerated = excelXLSXFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePathExcel.toString(), layoutCrawler);
 			
 			if (fileGenerated) {
 				log("Done, Output written to: " + normalizedOutputFilePath, layoutCrawler.isAsynchronous());
