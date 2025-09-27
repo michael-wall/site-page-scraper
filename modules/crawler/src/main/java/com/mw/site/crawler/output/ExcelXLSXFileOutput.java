@@ -247,13 +247,28 @@ public class ExcelXLSXFileOutput {
     				totalSkippedExternalLinkCount, totalSkippedPrivateLinkCount, totalLoginRequiredLinkCount,
     				totalUnexpectedExternalRedirectLinkCount);
     			
-    		//Empty row
+ 
+    		summaryRowCount ++;
+    		
+    		XSSFRow summaryPageSubHeadingRow = summarySheet.createRow(summaryRowCount);
+			
+    		summaryPageSubHeadingRow.createCell(0).setCellValue("Page Summary");
+    		summaryPageSubHeadingRow.getCell(0).setCellStyle(headingCellStyle);
+    		
+    		summaryRowCount ++;
+    		
+    		XSSFRow summaryPageCountSubHeadingRow = summarySheet.createRow(summaryRowCount);
+    		
+    		summaryPageCountSubHeadingRow.createCell(0).setCellValue("Page Count");
+    		summaryPageCountSubHeadingRow.createCell(1).setCellValue(pageTOs.size());
+    		
+    		summaryRowCount ++;
     		summaryRowCount ++;
     			
-    		XSSFRow summarySubHeadingRow = summarySheet.createRow(summaryRowCount);
+    		XSSFRow summaryLinkSubHeadingRow = summarySheet.createRow(summaryRowCount);
     			
-    		summarySubHeadingRow.createCell(0).setCellValue("Link Summary");
-    		summarySubHeadingRow.getCell(0).setCellStyle(headingCellStyle);
+    		summaryLinkSubHeadingRow.createCell(0).setCellValue("Link Summary");
+    		summaryLinkSubHeadingRow.getCell(0).setCellStyle(headingCellStyle);
     			
     		summaryRowCount ++;
     			

@@ -41,6 +41,10 @@ public class TextFileOutput {
 			
 			printWriter.println("");
 			
+			printWriter.println("PageCount: " + pageTOs.size());
+			
+			printWriter.println("");
+			
 			for (PageTO pageTO: pageTOs) {
 				boolean pageHasLinks = false;
 				if (Validator.isNotNull(pageTO.getLinks()) && !pageTO.getLinks().isEmpty()) {

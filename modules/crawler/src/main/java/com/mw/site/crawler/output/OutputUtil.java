@@ -52,7 +52,6 @@ public class OutputUtil {
 		if (config.isValidateLinksOnPages()) {
 			headings.add(new SimpleOutputTO("Validate Links on Pages > Skip Links using any other hostname", OutputUtil.getLabel(config.isSkipExternalLinks())));
 		}
-		headings.add(new SimpleOutputTO("Page Count", pageTOs.size()));
 		
 		return headings;
 	}
