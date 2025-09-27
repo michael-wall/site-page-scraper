@@ -12,6 +12,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -29,9 +31,8 @@ public class ExcelXLSXFileOutput {
         	XSSFFont headingFont = workbook.createFont();
         	headingFont.setBold(true);
         	
-        	XSSFCellStyle headingCellStyle = getHeadingCellStyle(workbook);
-        	
-        	headingCellStyle.setFont(headingFont);
+        	XSSFCellStyle headingCellStyle = getHeadingCellStyle(workbook, headingFont);        	
+        	XSSFCellStyle subHeadingCellStyle = getSubHeadingCellStyle(workbook, headingFont);
         	
 			long totalLinkCount = 0;
 			long totalValidLinkCount = 0;
@@ -43,7 +44,7 @@ public class ExcelXLSXFileOutput {
 
         	XSSFSheet summarySheet = workbook.createSheet("Summary");
         	XSSFSheet pagesSheet = workbook.createSheet("Pages");
-        	XSSFSheet linksSheet = workbook.createSheet("Links");
+        	XSSFSheet pageLinksSheet = workbook.createSheet("Page Links");
             
 			List<SimpleOutputTO> headings = OutputUtil.getConfigOutput(config, siteName, localeString, pageTOs, layoutCrawler);
             
@@ -198,7 +199,7 @@ public class ExcelXLSXFileOutput {
 				pagesRowCount ++;
 			}			        
 			
-            XSSFRow linksSheetHeaderRow = linksSheet.createRow(0);
+            XSSFRow linksSheetHeaderRow = pageLinksSheet.createRow(0);
             
             linksSheetHeaderRow.createCell(0).setCellValue("Source Page");
             linksSheetHeaderRow.getCell(0).setCellStyle(headingCellStyle);
@@ -225,11 +226,16 @@ public class ExcelXLSXFileOutput {
                 	
                 	totalLinkCount += pageTO.getLinks().size();
                 	
+                	int pageLinkCount = 1;
+                	
                 	for (LinkTO linkTO: linkTOs) {
-                    	XSSFRow linksRow = linksSheet.createRow(linksRowCount);
+                    	XSSFRow linksRow = pageLinksSheet.createRow(linksRowCount);
                     	
-                    	linksRow.createCell(0).setCellValue(pageTO.getName());
-                    	linksRow.createCell(1).setCellValue(pageTO.getFriendlyUrl());
+                    	if (pageLinkCount == 1) { // Only populate for the first link of each page...
+                        	linksRow.createCell(0).setCellValue(pageTO.getName());
+                        	linksRow.createCell(1).setCellValue(pageTO.getFriendlyUrl());                    		
+                    	}
+
                     	linksRow.createCell(2).setCellValue(linkTO.getLabel());
                     	linksRow.createCell(3).setCellValue(linkTO.getHref());
                     	
@@ -238,6 +244,7 @@ public class ExcelXLSXFileOutput {
                     	}
 
                     	linksRowCount ++;
+                    	pageLinkCount ++;
                 	}            		
             		
             	}
@@ -253,7 +260,7 @@ public class ExcelXLSXFileOutput {
     		XSSFRow summaryPageSubHeadingRow = summarySheet.createRow(summaryRowCount);
 			
     		summaryPageSubHeadingRow.createCell(0).setCellValue("Page Summary");
-    		summaryPageSubHeadingRow.getCell(0).setCellStyle(headingCellStyle);
+    		summaryPageSubHeadingRow.getCell(0).setCellStyle(subHeadingCellStyle);
     		
     		summaryRowCount ++;
     		
@@ -268,7 +275,7 @@ public class ExcelXLSXFileOutput {
     		XSSFRow summaryLinkSubHeadingRow = summarySheet.createRow(summaryRowCount);
     			
     		summaryLinkSubHeadingRow.createCell(0).setCellValue("Link Summary");
-    		summaryLinkSubHeadingRow.getCell(0).setCellStyle(headingCellStyle);
+    		summaryLinkSubHeadingRow.getCell(0).setCellStyle(subHeadingCellStyle);
     			
     		summaryRowCount ++;
     			
@@ -293,7 +300,7 @@ public class ExcelXLSXFileOutput {
             	pagesSheet.autoSizeColumn(i);
             }
             for (int i = 0; i <= 4; i++) {
-            	linksSheet.autoSizeColumn(i);
+            	pageLinksSheet.autoSizeColumn(i);
             }            
 
             try (FileOutputStream fileOut = new FileOutputStream(outputFilePath)) {
@@ -314,13 +321,26 @@ public class ExcelXLSXFileOutput {
 		return false;
 	}
 	
-	private XSSFCellStyle getHeadingCellStyle(XSSFWorkbook workbook) {
+	private XSSFCellStyle getHeadingCellStyle(XSSFWorkbook workbook, XSSFFont headingFont) {
 		XSSFCellStyle cellStyle = workbook.createCellStyle();
 
 		cellStyle.setWrapText(true);
+		cellStyle.setFont(headingFont);
+		
+		cellStyle.setFillForegroundColor(IndexedColors.LIME.getIndex());
+		cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		
 		return cellStyle;
 	}	
+	
+	private XSSFCellStyle getSubHeadingCellStyle(XSSFWorkbook workbook, XSSFFont headingFont) {
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+
+		cellStyle.setWrapText(true);
+		cellStyle.setFont(headingFont);
+		
+		return cellStyle;
+	}		
 
     private static final Log _log = LogFactoryUtil.getLog(ExcelXLSXFileOutput.class);
 }
