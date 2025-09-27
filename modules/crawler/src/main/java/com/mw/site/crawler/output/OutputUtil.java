@@ -52,7 +52,7 @@ public class OutputUtil {
 		if (config.isValidateLinksOnPages()) {
 			headings.add(new SimpleOutputTO("Validate Links on Pages > Skip Links using any other hostname", OutputUtil.getLabel(config.isSkipExternalLinks())));
 		}
-		headings.add(new SimpleOutputTO("Page Count", pageTOs.size() + ""));
+		headings.add(new SimpleOutputTO("Page Count", pageTOs.size()));
 		
 		return headings;
 	}
@@ -64,19 +64,19 @@ public class OutputUtil {
 			long totalUnexpectedExternalRedirectLinkCount) {
 		List<SimpleOutputTO> headings = new ArrayList<SimpleOutputTO>();
 		
-		headings.add(new SimpleOutputTO("Total Link Count", totalLinkCount + ""));
+		headings.add(new SimpleOutputTO("Total Link Count", totalLinkCount));
 		
 		if (config.isValidateLinksOnPages()) {
-			headings.add(new SimpleOutputTO("Total Valid Link Count", totalValidLinkCount + ""));
-			headings.add(new SimpleOutputTO("Total Invalid Link Count", totalInvalidLinkCount + ""));
+			headings.add(new SimpleOutputTO("Total Valid Link Count", totalValidLinkCount));
+			headings.add(new SimpleOutputTO("Total Invalid Link Count", totalInvalidLinkCount));
 			if (config.isSkipExternalLinks()) {
-				headings.add(new SimpleOutputTO("Total Skipped Other Hostname Link Count", totalSkippedExternalLinkCount + ""));
+				headings.add(new SimpleOutputTO("Total Skipped Other Hostname Link Count", totalSkippedExternalLinkCount));
 			}
 			if (config.isRunAsGuestUser()) {
-				headings.add(new SimpleOutputTO("Total Skipped Private Link Count", totalSkippedPrivateLinkCount + ""));
+				headings.add(new SimpleOutputTO("Total Skipped Private Link Count", totalSkippedPrivateLinkCount));
 			}
-			headings.add(new SimpleOutputTO("Total Login Required Link Count Link Count", totalLoginRequiredLinkCount + ""));
-			headings.add(new SimpleOutputTO("Total Unexpected Other Hostname Redirect Link Count", totalUnexpectedExternalRedirectLinkCount + ""));
+			headings.add(new SimpleOutputTO("Total Login Required Link Count Link Count", totalLoginRequiredLinkCount));
+			headings.add(new SimpleOutputTO("Total Unexpected Other Hostname Redirect Link Count", totalUnexpectedExternalRedirectLinkCount));
 		}
 		
 		return headings;

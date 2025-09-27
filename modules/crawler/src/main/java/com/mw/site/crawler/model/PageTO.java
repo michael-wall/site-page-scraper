@@ -7,6 +7,7 @@ public class PageTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private String name;
+	private String friendlyUrl;
 	private String url;
 	private boolean privatePage = false;
 	private boolean hiddenPage = false;
@@ -26,6 +27,14 @@ public class PageTO implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getFriendlyUrl() {
+		return friendlyUrl;
+	}
+
+	public void setFriendlyUrl(String friendlyUrl) {
+		this.friendlyUrl = friendlyUrl;
 	}
 
 	public String getUrl() {

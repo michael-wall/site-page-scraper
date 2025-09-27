@@ -12,8 +12,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.List;
 
-import org.apache.http.HttpStatus;
-
 public class TextFileOutput {
 
 	public boolean output(ConfigTO config, String siteName, String localeString, List<PageTO> pageTOs, String outputFilePath, LayoutCrawler layoutCrawler) {
@@ -33,8 +31,12 @@ public class TextFileOutput {
 			
 			List<SimpleOutputTO> headings = OutputUtil.getConfigOutput(config, siteName, localeString, pageTOs, layoutCrawler);
 			
-			for (SimpleOutputTO output: headings) {
-				printWriter.println(output.getLabel() + ": " + output.getValue());
+			for (SimpleOutputTO output: headings) {				
+				if (output.isStoringLong()) {
+					printWriter.println(output.getLabel() + ": " + output.getLongValue());
+				} else {
+					printWriter.println(output.getLabel() + ": " + output.getValue());
+				}
 			}
 			
 			printWriter.println("");
@@ -47,6 +49,7 @@ public class TextFileOutput {
 				
 				printWriter.println("**********************************************************************");
 				printWriter.println("[" + pageCount + "] Page Name: " + pageTO.getName());
+				printWriter.println("[" + pageCount + "] Page Friendly URL: " + pageTO.getFriendlyUrl());
 				printWriter.println("[" + pageCount + "] Page URL: " + pageTO.getUrl());
 				if (pageTO.isPrivatePage()) {
 					printWriter.println("[" + pageCount + "] Page Type: Private Page");
@@ -120,10 +123,14 @@ public class TextFileOutput {
 			List<SimpleOutputTO> footers = OutputUtil.getSummaryOutput(config, totalLinkCount, totalValidLinkCount, totalInvalidLinkCount,
 					totalSkippedExternalLinkCount, totalSkippedPrivateLinkCount, totalLoginRequiredLinkCount,
 					totalUnexpectedExternalRedirectLinkCount);
-			
+				
 			for (SimpleOutputTO output: footers) {
-				printWriter.println(output.getLabel() + ": " + output.getValue());
-			}
+				if (output.isStoringLong()) {
+					printWriter.println(output.getLabel() + ": " + output.getLongValue());
+				} else {
+					printWriter.println(output.getLabel() + ": " + output.getValue());
+				}
+			}				
 
 			return true;
 			

@@ -98,6 +98,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 		
+		String outputType  = ParamUtil.getString(actionRequest, "outputType", SitePageCrawlerConfiguration.OUTPUT_TYPE.EXCEL);
 		boolean webContentDisplayWidgetLinksOnly = ParamUtil.getBoolean(actionRequest, "webContentDisplayWidgetLinksOnly");
 		boolean runAsGuestUser = ParamUtil.getBoolean(actionRequest, "runAsGuestUser");
 		boolean useCurrentUsersLocaleWhenRunAsGuestUser = ParamUtil.getBoolean(actionRequest, "useCurrentUsersLocaleWhenRunAsGuestUser");
@@ -116,7 +117,7 @@ public class CrawlerPortletActionCommand extends BaseMVCActionCommand {
 		}
 		
 		InfraConfigTO infraConfig = sitePageLinkCrawler.getInfraConfiguration();
-		ConfigTO config = new ConfigTO(webContentDisplayWidgetLinksOnly, runAsGuestUser, useCurrentUsersLocaleWhenRunAsGuestUser, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages, skipExternalLinks);
+		ConfigTO config = new ConfigTO(outputType, webContentDisplayWidgetLinksOnly, runAsGuestUser, useCurrentUsersLocaleWhenRunAsGuestUser, includePublicPages, includePrivatePages, includeHiddenPages, checkPageGuestRoleViewPermission, validateLinksOnPages, skipExternalLinks);
 	
 		HttpServletRequest httpRequest = PortalUtil.getHttpServletRequest(actionRequest);
 		

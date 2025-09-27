@@ -2,6 +2,7 @@ package com.mw.site.crawler.output;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.mw.site.crawler.LayoutCrawler;
 import com.mw.site.crawler.config.ConfigTO;
 import com.mw.site.crawler.model.LinkTO;
@@ -11,6 +12,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -22,6 +25,13 @@ public class ExcelXLSXFileOutput {
 		
         try {
         	workbook = new XSSFWorkbook();
+        	
+        	XSSFFont headingFont = workbook.createFont();
+        	headingFont.setBold(true);
+        	
+        	XSSFCellStyle headingCellStyle = getHeadingCellStyle(workbook);
+        	
+        	headingCellStyle.setFont(headingFont);
         	
 			long totalLinkCount = 0;
 			long totalValidLinkCount = 0;
@@ -39,8 +49,12 @@ public class ExcelXLSXFileOutput {
             
             // Create a header row
             XSSFRow summaryHeaderRow = summarySheet.createRow(0);
+            
             summaryHeaderRow.createCell(0).setCellValue("Setting");
+            summaryHeaderRow.getCell(0).setCellStyle(headingCellStyle);
+            
             summaryHeaderRow.createCell(1).setCellValue("Value");
+            summaryHeaderRow.getCell(1).setCellStyle(headingCellStyle);
             
             int summaryRowCount = 1;
             
@@ -48,67 +62,130 @@ public class ExcelXLSXFileOutput {
 				XSSFRow summaryRow = summarySheet.createRow(summaryRowCount);
 				
 				summaryRow.createCell(0).setCellValue(output.getLabel());
-				summaryRow.createCell(1).setCellValue(output.getValue());
+				
+				if (output.isStoringLong()) {
+					summaryRow.createCell(1).setCellValue(output.getLongValue());	
+				} else {
+					summaryRow.createCell(1).setCellValue(output.getValue());
+				}
 
 				summaryRowCount ++;
 			}
             
             int pagesRowCount = 1;
             
+            int pageHeaderColumnIndex = 0;
+            
             XSSFRow pagesHeaderRow = pagesSheet.createRow(0);
-            pagesHeaderRow.createCell(0).setCellValue("Name");
-            pagesHeaderRow.createCell(1).setCellValue("URL");
-            pagesHeaderRow.createCell(2).setCellValue("Public Page");
+            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Page Name");
+            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+            
+            pageHeaderColumnIndex++;
+            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Page Friendly URL");
+            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+            
+            pageHeaderColumnIndex++;
+            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Page URL");
+            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+            
+            pageHeaderColumnIndex++;
+            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Public Page");
+            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
             
             if (config.isIncludeHiddenPages()) {
-            	pagesHeaderRow.createCell(3).setCellValue("Hidden Page");
+            	pageHeaderColumnIndex++;
+            	pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Hidden Page");
+            	pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
             }
             
             if (config.isCheckPageGuestRoleViewPermission()) {
-                pagesHeaderRow.createCell(getDynamicColumnNumberX(config)).setCellValue("Public Page Guest Role View Permission Enabled");            	
+            	pageHeaderColumnIndex++;
+                pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Public Page Guest Role View Permission Enabled");
+                pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
             }
             
-            pagesHeaderRow.createCell(getDynamicColumnNumberY(config)).setCellValue("Page Link Count");
-            
-            int z = getDynamicColumnNumberY(config);
-            
+            pageHeaderColumnIndex++;
+            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Page Link Count");
+            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+           
             if (config.isValidateLinksOnPages()) {
-	            pagesHeaderRow.createCell(z + 1).setCellValue("Valid Link Count");
-	            pagesHeaderRow.createCell(z + 2).setCellValue("Invalid Link Count");
-	            pagesHeaderRow.createCell(z + 3).setCellValue("Skipped Other Hostname Link Count");
-	            pagesHeaderRow.createCell(z + 4).setCellValue("Skipped Private Link Count");
-	            pagesHeaderRow.createCell(z + 5).setCellValue("Login Required Link Count");
-	            pagesHeaderRow.createCell(z + 6).setCellValue("Unexpected External Redirect Link Count");
+            	pageHeaderColumnIndex++;
+	            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Valid Link Count");
+	            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+	            
+	            pageHeaderColumnIndex++;
+	            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Invalid Link Count");
+	            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+	            
+	            pageHeaderColumnIndex++;
+	            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Skipped Other Hostname Link Count");
+	            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+	            
+	            pageHeaderColumnIndex++;
+	            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Skipped Private Link Count");
+	            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+	            
+	            pageHeaderColumnIndex++;
+	            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Login Required Link Count");
+	            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+	            
+	            pageHeaderColumnIndex++;
+	            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Unexpected External Redirect Link Count");
+	            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
             }
             
 			for (PageTO pageTO: pageTOs) {
 				XSSFRow pagesRow = pagesSheet.createRow(pagesRowCount);
+				
+				int pageRowColumnIndex = 0;
 			
-				pagesRow.createCell(0).setCellValue(pageTO.getName());
-				pagesRow.createCell(1).setCellValue(pageTO.getUrl());
-				pagesRow.createCell(2).setCellValue(OutputUtil.getLabel(!pageTO.isPrivatePage()));
+				pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getName());
+				
+				pageRowColumnIndex++;
+				pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getFriendlyUrl());
+				
+				pageRowColumnIndex++;
+				pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getUrl());
+				
+				pageRowColumnIndex++;
+				pagesRow.createCell(pageRowColumnIndex).setCellValue(OutputUtil.getLabel(!pageTO.isPrivatePage()));
 				
 				if (config.isIncludeHiddenPages()) {
-					pagesRow.createCell(3).setCellValue(OutputUtil.getLabel(pageTO.isHiddenPage()));
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(OutputUtil.getLabel(pageTO.isHiddenPage()));
 				}
 				
 				if (config.isCheckPageGuestRoleViewPermission()) {
 					if (!pageTO.isPrivatePage()) {
-						pagesRow.createCell(getDynamicColumnNumberX(config)).setCellValue(OutputUtil.getLabel(pageTO.getGuestRoleViewPermissionEnabled()));
+						pageRowColumnIndex++;
+						pagesRow.createCell(pageRowColumnIndex).setCellValue(OutputUtil.getLabel(pageTO.getGuestRoleViewPermissionEnabled()));
 					} else {
-						pagesRow.createCell(getDynamicColumnNumberX(config)).setCellValue("N/A");
+						pageRowColumnIndex++;
+						pagesRow.createCell(pageRowColumnIndex).setCellValue("N/A");
 					}
 				}
 				
-				pagesRow.createCell(getDynamicColumnNumberY(config)).setCellValue(pageTO.getLinks().size());
+				pageRowColumnIndex++;
+				pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getLinks().size());
 
 				if (config.isValidateLinksOnPages()) {
-					pagesRow.createCell(z + 1).setCellValue(pageTO.getValidLinkCount());
-					pagesRow.createCell(z + 2).setCellValue(pageTO.getInvalidLinkCount());
-					pagesRow.createCell(z + 3).setCellValue(pageTO.getSkippedExternalLinkCount());
-					pagesRow.createCell(z + 4).setCellValue(pageTO.getSkippedPrivateLinkCount());
-					pagesRow.createCell(z + 5).setCellValue(pageTO.getLoginRequiredLinkCount());
-					pagesRow.createCell(z + 6).setCellValue(pageTO.getUnexpectedExternalRedirectLinkCount());
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getValidLinkCount());
+					
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getInvalidLinkCount());
+					
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getSkippedExternalLinkCount());
+					
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getSkippedPrivateLinkCount());
+					
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getLoginRequiredLinkCount());
+					
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getUnexpectedExternalRedirectLinkCount());
 
 					totalValidLinkCount += pageTO.getValidLinkCount();
 					totalInvalidLinkCount += pageTO.getInvalidLinkCount();
@@ -122,68 +199,94 @@ public class ExcelXLSXFileOutput {
 			}			        
 			
             XSSFRow linksSheetHeaderRow = linksSheet.createRow(0);
-            linksSheetHeaderRow.createCell(0).setCellValue("Page");
-            linksSheetHeaderRow.createCell(1).setCellValue("Link Label");
-            linksSheetHeaderRow.createCell(2).setCellValue("Link URL");
+            
+            linksSheetHeaderRow.createCell(0).setCellValue("Source Page");
+            linksSheetHeaderRow.getCell(0).setCellStyle(headingCellStyle);
+            
+            linksSheetHeaderRow.createCell(1).setCellValue("Source Page Friendly URL");
+            linksSheetHeaderRow.getCell(1).setCellStyle(headingCellStyle);
+            
+            linksSheetHeaderRow.createCell(2).setCellValue("Link Label");
+            linksSheetHeaderRow.getCell(2).setCellStyle(headingCellStyle);
+            
+            linksSheetHeaderRow.createCell(3).setCellValue("Link URL");
+            linksSheetHeaderRow.getCell(3).setCellStyle(headingCellStyle);
             
             if (config.isValidateLinksOnPages()) {
-            	linksSheetHeaderRow.createCell(3).setCellValue("Link Status");
+            	linksSheetHeaderRow.createCell(4).setCellValue("Link Status");
+            	linksSheetHeaderRow.getCell(4).setCellStyle(headingCellStyle);
 	        }
             
             int linksRowCount = 1;
             
-            for (PageTO pageTO: pageTOs) {
-            	List<LinkTO> linkTOs = pageTO.getLinks();
-            	
-            	for (LinkTO linkTO: linkTOs) {
-                	XSSFRow linksRow = linksSheet.createRow(linksRowCount);
+            for (PageTO pageTO: pageTOs) {            	
+            	if (Validator.isNotNull(pageTO.getLinks()) && !pageTO.getLinks().isEmpty()) {
+                	List<LinkTO> linkTOs = pageTO.getLinks();
                 	
-                	linksRow.createCell(0).setCellValue(pageTO.getName());
-                	linksRow.createCell(1).setCellValue(linkTO.getLabel());
-                	linksRow.createCell(2).setCellValue(linkTO.getHref());
+                	totalLinkCount += pageTO.getLinks().size();
                 	
-                	if (config.isValidateLinksOnPages()) {
-                		linksRow.createCell(3).setCellValue(linkTO.getOutput());
-                	}
-                	
-                	linksRowCount ++;
+                	for (LinkTO linkTO: linkTOs) {
+                    	XSSFRow linksRow = linksSheet.createRow(linksRowCount);
+                    	
+                    	linksRow.createCell(0).setCellValue(pageTO.getName());
+                    	linksRow.createCell(1).setCellValue(pageTO.getFriendlyUrl());
+                    	linksRow.createCell(2).setCellValue(linkTO.getLabel());
+                    	linksRow.createCell(3).setCellValue(linkTO.getHref());
+                    	
+                    	if (config.isValidateLinksOnPages()) {
+                    		linksRow.createCell(4).setCellValue(linkTO.getOutput());
+                    	}
+
+                    	linksRowCount ++;
+                	}            		
+            		
             	}
             }
             
-			List<SimpleOutputTO> footers = OutputUtil.getSummaryOutput(config, totalLinkCount, totalValidLinkCount, totalInvalidLinkCount,
-					totalSkippedExternalLinkCount, totalSkippedPrivateLinkCount, totalLoginRequiredLinkCount,
-					totalUnexpectedExternalRedirectLinkCount);
-			
-			for (SimpleOutputTO output: footers) {
-				XSSFRow summaryRow = summarySheet.createRow(summaryRowCount);
-				
-				summaryRow.createCell(0).setCellValue(output.getLabel());
-				summaryRow.createCell(1).setCellValue(output.getValue());
-
-				summaryRowCount ++;
-			}
+    		List<SimpleOutputTO> footers = OutputUtil.getSummaryOutput(config, totalLinkCount, totalValidLinkCount, totalInvalidLinkCount,
+    				totalSkippedExternalLinkCount, totalSkippedPrivateLinkCount, totalLoginRequiredLinkCount,
+    				totalUnexpectedExternalRedirectLinkCount);
+    			
+    		//Empty row
+    		summaryRowCount ++;
+    			
+    		XSSFRow summarySubHeadingRow = summarySheet.createRow(summaryRowCount);
+    			
+    		summarySubHeadingRow.createCell(0).setCellValue("Link Summary");
+    		summarySubHeadingRow.getCell(0).setCellStyle(headingCellStyle);
+    			
+    		summaryRowCount ++;
+    			
+    		for (SimpleOutputTO output: footers) {
+    			XSSFRow summaryRow = summarySheet.createRow(summaryRowCount);
+    			
+    			summaryRow.createCell(0).setCellValue(output.getLabel());
+    			
+    			if (output.isStoringLong()) {
+    				summaryRow.createCell(1).setCellValue(output.getLongValue());
+    			} else {
+    				summaryRow.createCell(1).setCellValue(output.getValue());
+    			}
+ 
+   				summaryRowCount ++;
+   			}            	
 	         
-            //Autosize columns
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i <= 2; i++) {
             	summarySheet.autoSizeColumn(i);
             }
-            for (int i = 0; i < 12; i++) {
+            for (int i = 0; i <= pageHeaderColumnIndex; i++) {
             	pagesSheet.autoSizeColumn(i);
             }
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i <= 4; i++) {
             	linksSheet.autoSizeColumn(i);
             }            
 
-            // Write to file
             try (FileOutputStream fileOut = new FileOutputStream(outputFilePath)) {
                 workbook.write(fileOut);
             }
-
-            System.out.println("Excel file created: " + outputFilePath);
             
-		} catch (Exception e) {
-			System.out.println(e.getClass() + ": " + e.getMessage());
-			
+            return true;
+		} catch (Exception e) {		
 			_log.error(e.getClass() + ": " + e.getMessage(), e);
 		} finally {
 			if (workbook != null) {
@@ -196,19 +299,13 @@ public class ExcelXLSXFileOutput {
 		return false;
 	}
 	
-	private int getDynamicColumnNumberX(ConfigTO config) {
-		if (config.isIncludeHiddenPages()) return 4;
+	private XSSFCellStyle getHeadingCellStyle(XSSFWorkbook workbook) {
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+
+		cellStyle.setWrapText(true);
 		
-		return 3;
-	}
-	
-	private int getDynamicColumnNumberY(ConfigTO config) {
-		if (config.isIncludeHiddenPages() && config.isCheckPageGuestRoleViewPermission()) return 5;
-		
-		if (config.isIncludeHiddenPages()) return 4;
-		
-		return 3;
-	}
+		return cellStyle;
+	}	
 
     private static final Log _log = LogFactoryUtil.getLog(ExcelXLSXFileOutput.class);
 }

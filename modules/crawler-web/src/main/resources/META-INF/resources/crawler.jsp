@@ -42,8 +42,15 @@ ConfigTO sitePageCrawlerConfig = (ConfigTO)request.getAttribute("sitePageCrawler
 						<strong><liferay-ui:message key="consider-running-the-tool-separately-for-the-public-and-private-pages-using-the-most-appropriate-hostname-for-each" arguments="<%= new Object[] {origin} %>" translateArguments="false" /></strong><br />
 				</c:if>
 				<br />
-				<aui:form name="articleIdForm" action="${crawlPagesActionURL}" method="POST" autocomplete="off">
-				
+				<aui:form name="crawlerForm" action="${crawlPagesActionURL}" method="POST" autocomplete="off">
+					<div style="display: inline-flex; align-items: center; gap: 1rem; padding-bottom: 1rem;">
+    					<span style="padding-bottom: 5px;"><liferay-ui:message key="output-type" /></span>
+    					
+    					<aui:input inlineLabel="right" type="radio" name="outputType" value="<%= sitePageCrawlerConfig.getExcel() %>" checked="<%= sitePageCrawlerConfig.getExcel().equals(sitePageCrawlerConfig.getOutputType()) %>" label="outputType.excel.label" helpMessage="output-type-excel-help-message"/>
+    					
+    					<aui:input inlineLabel="right" type="radio" name="outputType" value="<%= sitePageCrawlerConfig.getText() %>" checked="<%= sitePageCrawlerConfig.getText().equals(sitePageCrawlerConfig.getOutputType()) %>" label="outputType.text.label" helpMessage="output-type-text-help-message"/>    				
+    				</div>
+						
 					<aui:input type="checkbox" name="webContentDisplayWidgetLinksOnly" label="web-content-display-widget-links-only" value="<%= sitePageCrawlerConfig.isWebContentDisplayWidgetLinksOnly() %>" helpMessage="web-content-display-widget-links-only-help-message" />
 
 					<aui:input type="checkbox" name="runAsGuestUser" label="${runAsGuestLabel}" value="<%= sitePageCrawlerConfig.isRunAsGuestUser() %>" helpMessage="run-as-guest-user-help-message" />

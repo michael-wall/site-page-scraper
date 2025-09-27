@@ -1,5 +1,6 @@
 ## Introduction ##
 - This tool can be used to export a list of Links on each Public and Private Page within a specific Liferay Site.
+  - The output format can be Excel (.xlsx) or Text (.txt).
   - Optionally each Pages Guest Role View Permission can be checked.
   - Optionally each Pages Links can be checked to ensure that they are valid.
 
@@ -14,6 +15,7 @@
   - In the case of the Custom Gogo Shell Commanda the values from the System Settings are applied.
 - Configure the Tool: Control Panel > System Settings > Content and Data > Site Page Crawler
 - Site Page Crawler Job:
+  - **Output Type**: The Output Type, options are Excel (.xlsx) or Text (.txt). Default is Excel (.xlsx).
   - **Web Content Display Widget Links Only**: Whether to include Links from Web Content Display Widget occurrences only. Default is true.
   - **Run as Guest User**: Whether to run as Guest User or not. Default is false. Will only include Public Pages, where the Guest Role has View permission for the page.
   - **Use Current Users Locale when Run as Guest User**: Whether to use the current users locale when run as Guest User or not.  If not enabled the locale used will be the site default locale. Only used if 'Run as Guest User' is true. This setting is used by the Site Page Crawler Widget only.
@@ -43,7 +45,7 @@
   - **locale**: Type Text, Mandatory, with the additional settings: Searchable: False
   - **crawledPages**: Type Long Integer, Mandatory, with the additional settings: Searchable: False
   - **created**: Type Date and Time, Mandatory, Time Storage: Convert to UTC, with the additional settings: Searchable: False
-  - **output**: Type Attachment, Mandatory, Request Files: Upload Directly from the User's Computer, Show Files in Documents and Media OFF, with the additional settings: Accepted File Extensions: txt, Searchable: False
+  - **output**: Type Attachment, Mandatory, Request Files: Upload Directly from the User's Computer, Show Files in Documents and Media OFF, with the additional settings: Accepted File Extensions: txt,xlsx and Searchable: False
  
 Setup Notes:
 - Ensure the users running the report have access to the Object Entry list screen and to the Liferay Object Entry records themselves.
@@ -69,69 +71,6 @@ Setup Notes:
   - It infers the friendly URL syntax
   - It can copy the cookies from the current user and pass these to the crawler to make server side authenticated requests to retrieve the pages as the user.
 - **Note that the widget runs in the context of the current users session, so the user must remain logged in for the asynchronous Site Page Crawler process to be able to crawl pages that don't have Guest role View access.**
-
-## Sample Output ## 
-```
-Trigger: Site Page Crawler Widget
-Site Name: LinkTest
-Locale: en_US
-Web Content Display Widget Links Only: Yes
-Run as Guest User: No
-Include Public Pages: Yes
-Include Private Pages: No
-Include Hidden Pages: Yes
-Check Public Page Guest Role View Permission: Yes
-Validate Links On Pages: Yes
-Validate Links On Pages > Skip External Links: No
-
-Page Count: 7
-
-**********************************************************************
-[1] Page Name: Public Test 1
-[1] Page URL: http://localhost:8080/web/linktest/public-test-1
-[1] Page Type: Public Page
-[1] Hidden Page: No
-[1] Public Page Guest Role View Permission Enabled: Yes
-[1] Page Link Count: 18
-[1] Valid Link Count: 14
-[1] Invalid Link Count: 4
-**********************************************************************
-
-[1-1] Link Label: Liferay
-[1-1] Link URL: https://www.liferay.com/
-[1-1] Link appears to be valid.
-
-[1-2] Link Label: Enrergy and Utilities
-[1-2] Link URL: https://www.liferay.com/industries/energy-and-utilities
-[1-2] Link appears to be valid.
-
-[1-3] Link Label: Learn
-[1-3] Link URL: https://learn.liferay.com/
-[1-3] Link appears to be valid.
-
-...
-
-[1-18] Link Label: Test 5 (Missing)
-[1-18] Link URL: /group/linktest/test-5
-[1-18] Link not verified: 404
-
-**********************************************************************
-[2] Page Name: Search
-[2] Page URL: http://localhost:8080/web/linktest/search
-[2] Page Type: Public Page
-[2] Hidden Page: Yes
-[2] Public Page Guest Role View Permission Enabled: No
-[2] Page Link Count: 0
-**********************************************************************
-
-No links found on the page.
-...
-...
-...
-Total Link Count: 63
-Total Valid Link Count: 59
-Total Invalid Link Count: 4
-```
 
 ## General Notes ##
 - This is a ‘proof of concept’ that is being provided ‘as is’ without any support coverage or warranty.

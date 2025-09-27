@@ -10,6 +10,21 @@ import aQute.bnd.annotation.metatype.Meta.Type;
 public interface SitePageCrawlerConfiguration {
 	public static final String PID = "com.mw.site.crawler.config.SitePageCrawlerConfiguration";
 	
+	public interface OUTPUT_TYPE {
+		public static final String EXCEL = ".xlsx";
+		
+		public static final String TEXT = ".txt";
+	}
+	
+	@Meta.AD(deflt = OUTPUT_TYPE.EXCEL, 
+		required = false, 
+		type = Type.String,
+		name = "field.outputType.name", 
+		description = "field.outputType.desc",
+		optionValues = {OUTPUT_TYPE.EXCEL, OUTPUT_TYPE.TEXT},
+		optionLabels = {"field.outputType.excel.label", "field.outputType.text.label"})
+	public String outputType();	
+	
 	@Meta.AD(deflt = "true", required = false, type = Type.Boolean, name = "field.webContentDisplayWidgetLinksOnly.name", description = "field.webContentDisplayWidgetLinksOnly.desc")
 	public boolean webContentDisplayWidgetLinksOnly();
 

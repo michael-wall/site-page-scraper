@@ -87,6 +87,7 @@ public class SitePageLinkCrawler {
 	public ResponseTO crawlPagesWeb(ConfigTO config, long companyId, Group group, String origin, User user, Locale locale, LayoutCrawler layoutCrawler, List<Layout> layouts) {
 		_log.info("starting crawlPagesWeb");
 		
+		_log.info("OutputType: " + config.getOutputType());
 		_log.info("CompanyId: " + companyId);
 		_log.info("Site GroupId: " + group.getGroupId());
 		_log.info("Locale: " + locale);
@@ -147,6 +148,8 @@ public class SitePageLinkCrawler {
 		InfraConfigTO infraConfig = getInfraConfiguration();
 		ConfigTO config = getDefaultConfiguration(false, false);
 		
+		_log.info("OutputType: " + config.getOutputType());
+		
 		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, origin, loginIdEnc, passwordEnc, cookieDomain, locale);
 		
 		_log.info("SitePublicUrlPrefix: " + layoutCrawler.getSitePublicUrlPrefix());
@@ -197,6 +200,8 @@ public class SitePageLinkCrawler {
 		//The synchronous always uses the System Settings...
 		InfraConfigTO infraConfig = getInfraConfiguration();
 		ConfigTO config = getDefaultConfiguration(true, false); // Running from Gogo Shell, this always uses Guest Locale...
+		
+		_log.info("OutputType: " + config.getOutputType());
 
 		LayoutCrawler layoutCrawler = new LayoutCrawler(companyId, siteId, infraConfig, origin, cookieDomain, guestUser, locale);
 		
@@ -232,6 +237,7 @@ public class SitePageLinkCrawler {
 					
 					PageTO pageTO = new PageTO();
 					
+					pageTO.setFriendlyUrl(layout.getFriendlyURL(locale));
 					pageTO.setName(layout.getName(locale));
 					pageTO.setPrivatePage(layout.isPrivateLayout());
 					pageTO.setHiddenPage(layout.isHidden());
@@ -360,23 +366,30 @@ public class SitePageLinkCrawler {
 			
 			File outputFolderFile = new File(_sitePageCrawlerInfraConfiguration.outputFolder());
 			if (!outputFolderFile.exists()) outputFolderFile.mkdirs();
+			
+			String outputType = config.getOutputType();
+			
+			boolean fileGenerated = false;
+			Path normalizedOutputFilePath = null;
+			
+			if (outputType.equalsIgnoreCase(SitePageCrawlerConfiguration.OUTPUT_TYPE.TEXT)) {
+				TextFileOutput textFileOutput = new TextFileOutput();
+				
+				String fileName = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + SitePageCrawlerConfiguration.OUTPUT_TYPE.TEXT;
+				String outputFilePath = outputFolderFile.getAbsolutePath() + "/" + fileName;
+				normalizedOutputFilePath = Paths.get(outputFilePath).normalize();
+				
+				fileGenerated = textFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), layoutCrawler);
+			} else {
+				ExcelXLSXFileOutput excelXLSXFileOutput = new ExcelXLSXFileOutput();
+				
+				String fileNameExcel = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + SitePageCrawlerConfiguration.OUTPUT_TYPE.EXCEL;
+				String outputFilePathExcel = outputFolderFile.getAbsolutePath() + "/" + fileNameExcel;
+				normalizedOutputFilePath = Paths.get(outputFilePathExcel).normalize();
+				
+				fileGenerated = excelXLSXFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), layoutCrawler);
+			}
 
-			String fileName = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + ".txt";
-			String outputFilePath = outputFolderFile.getAbsolutePath() + "/" + fileName;
-			Path normalizedOutputFilePath = Paths.get(outputFilePath).normalize();
-			
-			TextFileOutput textFileOutput = new TextFileOutput();
-			
-			boolean fileGenerated = textFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePath.toString(), layoutCrawler);
-
-			String fileNameExcel = "sitePageLinks_" + group.getName(locale) + "_" + locale.toString() + "_" + System.currentTimeMillis() + ".xlsx";
-			String outputFilePathExcel = outputFolderFile.getAbsolutePath() + "/" + fileNameExcel;
-			Path normalizedOutputFilePathExcel = Paths.get(outputFilePathExcel).normalize();
-			
-			ExcelXLSXFileOutput excelXLSXFileOutput = new ExcelXLSXFileOutput();
-					
-			boolean excelGenerated = excelXLSXFileOutput.output(config, group.getName(locale), locale.toString(), pageTOs, normalizedOutputFilePathExcel.toString(), layoutCrawler);
-			
 			if (fileGenerated) {
 				log("Done, Output written to: " + normalizedOutputFilePath, layoutCrawler.isAsynchronous());
 			} else {
@@ -432,8 +445,6 @@ public class SitePageLinkCrawler {
 	
 		return false;
 	}
-	
-
 	
 	private boolean includeLink(Element link) {
 		String label = link.text();
@@ -524,7 +535,13 @@ public class SitePageLinkCrawler {
 			useCurrentUsersLocaleWhenRunAsGuestUser = false;
 		}
 		
-		ConfigTO config = new ConfigTO(_sitePageCrawlerConfiguration.webContentDisplayWidgetLinksOnly(), runAsGuestUser, useCurrentUsersLocaleWhenRunAsGuestUser, includePublicPages, includePrivatePages, _sitePageCrawlerConfiguration.includeHiddenPages(), _sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission(), _sitePageCrawlerConfiguration.validateLinksOnPages(), _sitePageCrawlerConfiguration.skipExternalLinks());
+		String outputType = _sitePageCrawlerConfiguration.outputType();
+		
+		if (Validator.isNull(outputType)) {
+			outputType = SitePageCrawlerConfiguration.OUTPUT_TYPE.EXCEL;
+		}
+		
+		ConfigTO config = new ConfigTO(outputType, _sitePageCrawlerConfiguration.webContentDisplayWidgetLinksOnly(), runAsGuestUser, useCurrentUsersLocaleWhenRunAsGuestUser, includePublicPages, includePrivatePages, _sitePageCrawlerConfiguration.includeHiddenPages(), _sitePageCrawlerConfiguration.checkPageGuestRoleViewPermission(), _sitePageCrawlerConfiguration.validateLinksOnPages(), _sitePageCrawlerConfiguration.skipExternalLinks());
 		
 		return config;
 	}
