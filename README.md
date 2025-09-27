@@ -72,10 +72,17 @@ Setup Notes:
   - It can copy the cookies from the current user and pass these to the crawler to make server side authenticated requests to retrieve the pages as the user.
 - **Note that the widget runs in the context of the current users session, so the user must remain logged in for the asynchronous Site Page Crawler process to be able to crawl pages that don't have Guest role View access.**
 
+## Site Page Crawler Widget and Excel Output Type ##
+- Ensure that xlsx file extension has been added to the 'Site Page Crawler Output' custom Liferay Object > output field > Accepted File Extensions.
+- The following WARNING may appear in the Liferay logs when the Excel file is uploaded to the Site Page Crawler Output object record when using Liferay DXP 7.4. It can safely be ignored.
+```
+2025-09-27 12:53:12.989 WARN  [liferay/document_library_raw_metadata_processor-2][SAXHelper:128] SAX Security Manager could not be setup [log suppressed for 5 minutes]
+org.xml.sax.SAXNotRecognizedException: Property 'http://www.oracle.com/xml/jaxp/properties/entityExpansionLimit' is not recognized.
+```  
+
 ## General Notes ##
 - This is a ‘proof of concept’ that is being provided ‘as is’ without any support coverage or warranty.
 - This should be tested in a non-production environment with ‘production like’ data - i.e. volume and data types.
-- The output logic can be refactored to output in spreadsheet format if required by replacing the outputToTxtFile method e.g. using https://poi.apache.org/ - HSSF for .xls and XSSF for .xlsx.
 - The modules have been tested in a local environment with JDK 11, Liferay DXP 7.4 U92 and SAML SSO enabled.
 - The modules have been tested with Public and Private Pages that were either Content Pages or Widget Page using the Web Content Display Widget.
 - The Locale of the User is used when retrieving the Pages unless 'Run as Guest User' is enabled, in which case the 'Use Current Users Locale when Run as Guest User' setting determines the locale to be used.
@@ -83,7 +90,7 @@ Setup Notes:
 - The links on the Pages can be Absolute or Relative. Absolute links can be links to other websites but in that case they should be accessible to the server where the Gogo shell command is run from, and not require authentication.
 - The Jsoup API is used to extract all links contained within the <section ... id="content"> .... </section> from Liferays themes. This is done to exclude links from header and footer etc. Change this if needed in Control Panel > System Settings > Content and Data > Site Page Crawler.
 - Some internal Liferay links are excluded from the output - see SitePageLinkCrawler.java, includeLink(Element link) method for more details. Update this method if needed.
-  - Anchor links to the current page, mailto:,  file://, and tel: links are ignored for example.
+  - Anchor links to the current page, mailto:, file://, and tel: links are ignored for example.
 - The order of the links in the output is based on the order they are extracted from the HTML by the Jsoup API.
 - Bear in mind that Content Pages may have different Experiences or Widget and Content Pages render different content based on the user accessing the page e.g. based on Widget Permissions etc.
 
