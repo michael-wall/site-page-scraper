@@ -87,6 +87,7 @@ org.xml.sax.SAXNotRecognizedException: Property 'http://www.oracle.com/xml/jaxp/
 - The modules have been tested with Public and Private Pages that were either Content Pages or Widget Page using the Web Content Display Widget.
 - The Locale of the User is used when retrieving the Pages unless 'Run as Guest User' is enabled, in which case the 'Use Current Users Locale when Run as Guest User' setting determines the locale to be used.
 - A link is considered valid when it returns a 200 HTTP Status Code.
+  - See here for more details on HTTP Status Codes e.g. 404 etc.: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 - The links on the Pages can be Absolute or Relative. Absolute links can be links to other websites but in that case they should be accessible to the server where the Gogo shell command is run from, and not require authentication.
 - The Jsoup API is used to extract all links contained within the <section ... id="content"> .... </section> from Liferays themes. This is done to exclude links from header and footer etc. Change this if needed in Control Panel > System Settings > Content and Data > Site Page Crawler.
 - Some internal Liferay links are excluded from the output - see SitePageLinkCrawler.java, includeLink(Element link) method for more details. Update this method if needed.
