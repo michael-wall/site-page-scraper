@@ -1,5 +1,6 @@
 package com.mw.site.crawler.output;
 
+import com.liferay.portal.kernel.util.Validator;
 import com.mw.site.crawler.LayoutCrawler;
 import com.mw.site.crawler.config.ConfigTO;
 import com.mw.site.crawler.model.PageTO;
@@ -94,4 +95,17 @@ public class OutputUtil {
 		
 		return "No";
  	}	
+	
+	
+	public static int parseInt(String stringValue) {
+		int intValue = 0;
+	
+		if (Validator.isNull(stringValue)) return intValue;
+	
+		try {
+			intValue = Integer.parseInt(stringValue);
+		} catch (NumberFormatException e) {}
+		
+		return intValue;
+	}	
 }

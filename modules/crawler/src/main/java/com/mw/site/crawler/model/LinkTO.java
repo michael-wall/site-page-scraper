@@ -47,16 +47,25 @@ public class LinkTO implements Serializable{
 	
 	public String getOutput() {
 		if (Validator.isNotNull(getStatusCode()) && getStatusCode().equalsIgnoreCase("" + HttpStatus.SC_OK)) { //200
-			return getStatusMessage();	
+			return "Link appears to be valid.";	
 		} else if (Validator.isNotNull(getStatusCode()) && isNonExceptionCode()) {
-			return getStatusMessage();						
+			return "Link not verified. " + getStatusMessage();
 		} else {
 			if (Validator.isNotNull(getStatusMessage())) {
-				return "Link not verified: " + getStatusCode() + ", " + getStatusMessage();
+				return "Link not verified. " + getStatusMessage();
 			} else {
-				return "Link not verified: " + getStatusCode();
+				return "Link not verified.";
 			}
 		}
+	}
+	
+	public String getOutputHTTPStatusCode() {
+		// Only return a HTTP Status code, not another error code...
+		if (!isNonExceptionCode() && !statusCode.equalsIgnoreCase(EXCEPTION_STATUS_CODE + "")) {
+			return statusCode;
+		}
+		
+		return "";
 	}
 	
 	public LinkTO(String href, String label, String statusCode, String statusMessage) {

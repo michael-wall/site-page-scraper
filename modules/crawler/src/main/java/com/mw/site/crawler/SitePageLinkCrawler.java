@@ -236,6 +236,9 @@ public class SitePageLinkCrawler {
 					if (!isCrawlableLayout(config, layout)) continue;
 					
 					PageTO pageTO = new PageTO();
+
+					pageTO.setLayoutId(layout.getLayoutId());
+					pageTO.setPlid(layout.getPlid());
 					
 					pageTO.setFriendlyUrl(layout.getFriendlyURL(locale));
 					pageTO.setName(layout.getName(locale));

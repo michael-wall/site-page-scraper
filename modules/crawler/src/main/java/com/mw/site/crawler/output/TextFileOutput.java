@@ -54,7 +54,7 @@ public class TextFileOutput {
 				printWriter.println("**********************************************************************");
 				printWriter.println("[" + pageCount + "] Page Name: " + pageTO.getName());
 				printWriter.println("[" + pageCount + "] Page Friendly URL: " + pageTO.getFriendlyUrl());
-				printWriter.println("[" + pageCount + "] Page URL: " + pageTO.getUrl());
+				printWriter.println("[" + pageCount + "] Page Full URL: " + pageTO.getUrl());
 				if (pageTO.isPrivatePage()) {
 					printWriter.println("[" + pageCount + "] Page Type: Private Page");
 				} else {
@@ -106,6 +106,11 @@ public class TextFileOutput {
 						printWriter.println("[" + pageCount + "-" + linkCount + "] Link URL: " + linkTO.getHref());
 			
 						if (config.isValidateLinksOnPages()) {
+                    		int httpStatusCodeInt = OutputUtil.parseInt(linkTO.getOutputHTTPStatusCode());
+                    		if (httpStatusCodeInt > 0) {
+    							printWriter.println("[" + pageCount + "-" + linkCount + "] " + "HTTP Status Code: " + httpStatusCodeInt);	
+
+                    		}
 							printWriter.println("[" + pageCount + "-" + linkCount + "] " + linkTO.getOutput());	
 						}
 						

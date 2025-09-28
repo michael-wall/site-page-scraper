@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -87,12 +88,14 @@ public class ExcelXLSXFileOutput {
             pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
             
             pageHeaderColumnIndex++;
-            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Page URL");
+            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Page Full URL");
             pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
             
-            pageHeaderColumnIndex++;
-            pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Public Page");
-            pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);
+            if (config.isIncludePublicPages() && config.isIncludePrivatePages()) {
+                pageHeaderColumnIndex++;
+                pagesHeaderRow.createCell(pageHeaderColumnIndex).setCellValue("Page Type");
+                pagesHeaderRow.getCell(pageHeaderColumnIndex).setCellStyle(headingCellStyle);            	
+            }
             
             if (config.isIncludeHiddenPages()) {
             	pageHeaderColumnIndex++;
@@ -149,8 +152,15 @@ public class ExcelXLSXFileOutput {
 				pageRowColumnIndex++;
 				pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTO.getUrl());
 				
-				pageRowColumnIndex++;
-				pagesRow.createCell(pageRowColumnIndex).setCellValue(OutputUtil.getLabel(!pageTO.isPrivatePage()));
+				if (config.isIncludePublicPages() && config.isIncludePrivatePages()) {
+					String pageTypeLabel = "Private";
+					if (!pageTO.isPrivatePage()) {
+						pageTypeLabel = "Public";
+					}
+					
+					pageRowColumnIndex++;
+					pagesRow.createCell(pageRowColumnIndex).setCellValue(pageTypeLabel);	 
+				}
 				
 				if (config.isIncludeHiddenPages()) {
 					pageRowColumnIndex++;
@@ -198,11 +208,11 @@ public class ExcelXLSXFileOutput {
 				}
 				
 				pagesRowCount ++;
-			}			        
+			}
 			
             XSSFRow linksSheetHeaderRow = pageLinksSheet.createRow(0);
             
-            linksSheetHeaderRow.createCell(0).setCellValue("Source Page");
+            linksSheetHeaderRow.createCell(0).setCellValue("Source Page Name");
             linksSheetHeaderRow.getCell(0).setCellStyle(headingCellStyle);
             
             linksSheetHeaderRow.createCell(1).setCellValue("Source Page Friendly URL");
@@ -218,8 +228,11 @@ public class ExcelXLSXFileOutput {
             linksSheetHeaderRow.getCell(4).setCellStyle(headingCellStyle);
             
             if (config.isValidateLinksOnPages()) {
-            	linksSheetHeaderRow.createCell(5).setCellValue("Link Status");
+            	linksSheetHeaderRow.createCell(5).setCellValue("HTTP Status Code");
             	linksSheetHeaderRow.getCell(5).setCellStyle(headingCellStyle);
+            	
+            	linksSheetHeaderRow.createCell(6).setCellValue("Link Status Message");
+            	linksSheetHeaderRow.getCell(6).setCellStyle(headingCellStyle);
 	        }
             
             int linksRowCount = 1;
@@ -235,13 +248,13 @@ public class ExcelXLSXFileOutput {
                 	for (LinkTO linkTO: linkTOs) {
                     	XSSFRow linksRow = pageLinksSheet.createRow(linksRowCount);
                     	
-                    	if (pageLinkCount == 1) { // Only populate for the first link of each page...
-                        	linksRow.createCell(0).setCellValue(pageTO.getName());
-                        	linksRow.getCell(0).setCellStyle(firstLinkRowCellStyle);
+                    	//if (pageLinkCount == 1) { // Only populate for the first link of each page...
+                        linksRow.createCell(0).setCellValue(pageTO.getName());
+                        if (pageLinkCount == 1) linksRow.getCell(0).setCellStyle(firstLinkRowCellStyle);
                         	
-                        	linksRow.createCell(1).setCellValue(pageTO.getFriendlyUrl());
-                        	linksRow.getCell(1).setCellStyle(firstLinkRowCellStyle);
-                    	}
+                        linksRow.createCell(1).setCellValue(pageTO.getFriendlyUrl());
+                        if (pageLinkCount == 1) linksRow.getCell(1).setCellStyle(firstLinkRowCellStyle);
+                    	//}
                     	
                     	linksRow.createCell(2).setCellValue(pageLinkCount);
                     	if (pageLinkCount == 1) linksRow.getCell(2).setCellStyle(firstLinkRowCellStyle);
@@ -253,8 +266,17 @@ public class ExcelXLSXFileOutput {
                     	if (pageLinkCount == 1) linksRow.getCell(4).setCellStyle(firstLinkRowCellStyle);
                     	
                     	if (config.isValidateLinksOnPages()) {
-                    		linksRow.createCell(5).setCellValue(linkTO.getOutput());
-                    		if (pageLinkCount == 1) linksRow.getCell(5).setCellStyle(firstLinkRowCellStyle);
+                    		int httpStatusCodeInt = OutputUtil.parseInt(linkTO.getOutputHTTPStatusCode());
+                    		if (httpStatusCodeInt == 0) {
+                        		linksRow.createCell(5).setCellValue("");
+                        		if (pageLinkCount == 1) linksRow.getCell(5).setCellStyle(firstLinkRowCellStyle);	
+                    		} else {
+                        		linksRow.createCell(5).setCellValue(httpStatusCodeInt);
+                        		if (pageLinkCount == 1) linksRow.getCell(5).setCellStyle(firstLinkRowCellStyle);
+                    		}
+                    	
+                    		linksRow.createCell(6).setCellValue(linkTO.getOutput());
+                    		if (pageLinkCount == 1) linksRow.getCell(6).setCellStyle(firstLinkRowCellStyle);
                     	}
                     	
                     	linksRowCount ++;
@@ -268,7 +290,6 @@ public class ExcelXLSXFileOutput {
     				totalSkippedExternalLinkCount, totalSkippedPrivateLinkCount, totalLoginRequiredLinkCount,
     				totalUnexpectedExternalRedirectLinkCount);
     			
- 
     		summaryRowCount ++;
     		
     		XSSFRow summaryPageSubHeadingRow = summarySheet.createRow(summaryRowCount);
@@ -315,9 +336,12 @@ public class ExcelXLSXFileOutput {
             for (int i = 0; i <= pageHeaderColumnIndex; i++) {
             	pagesSheet.autoSizeColumn(i);
             }
-            for (int i = 0; i <= 5; i++) {
+            for (int i = 0; i <= 6; i++) {
             	pageLinksSheet.autoSizeColumn(i);
             }            
+           
+            // Add auto filter on the first 2 columns
+            pageLinksSheet.setAutoFilter(new CellRangeAddress(0, linksRowCount, 0, 1));
 
             try (FileOutputStream fileOut = new FileOutputStream(outputFilePath)) {
                 workbook.write(fileOut);
@@ -367,7 +391,7 @@ public class ExcelXLSXFileOutput {
 		cellStyle.setFont(headingFont);
 		
 		return cellStyle;
-	}		
+	}
 
     private static final Log _log = LogFactoryUtil.getLog(ExcelXLSXFileOutput.class);
 }

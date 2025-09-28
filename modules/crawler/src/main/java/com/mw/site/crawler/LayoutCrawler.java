@@ -215,7 +215,7 @@ public class LayoutCrawler {
             }
             
             if (isRunAsGuest && skipAsPrivatePage) {
-        		_log.info("Skipped Private Page Link: " + url);
+        		//_log.info("Skipped Private Page Link: " + url);
         		
                 responseStringArray[0] = "" + LinkTO.SKIPPED_PRIVATE_PAGE_STATUS_CODE;
                 responseStringArray[1] = "Skipped Private Page Link.";
@@ -224,7 +224,7 @@ public class LayoutCrawler {
             }
             
             if (skipExternalLinks && skipAsExternal) {
-        		_log.info("Skipped Other Hostname Link: " + url);
+        		//_log.info("Skipped Other Hostname Link: " + url);
         		
                 responseStringArray[0] = "" + LinkTO.SKIPPED_EXTERNAL_LINK_STATUS_CODE;
                 responseStringArray[1] = "Skipped Other Hostname Link to " + getHostSummary(host);
@@ -252,17 +252,17 @@ public class LayoutCrawler {
             
             // End URL is a login screen (non-SSO or subset of SSO e.g. if multiple IdP selector shown)
             if (Validator.isNotNull(finalPath) && finalPath.startsWith("/c/portal/login")) {
-        		_log.info("Login Redirect Triggered: " + url);
+        		//_log.info("Login Redirect Triggered: " + url);
         		
                 responseStringArray[0] = "" + LinkTO.LOGIN_REDIRECT_STATUS_CODE;
                 responseStringArray[1] = "Login Redirect Triggered.";
 
-                return responseStringArray;       
+                return responseStringArray;
             }
             
             // End URL is a login screen (non-SSO or subset of SSO e.g. if multiple IdP selector shown)
             if (Validator.isNotNull(finalQuery) && finalQuery.indexOf("_com_liferay_login_web_portlet_LoginPortlet") > 0) {
-        		_log.info("Login Redirect Triggered: " + url);
+        		//_log.info("Login Redirect Triggered: " + url);
         		
                 responseStringArray[0] = "" + LinkTO.LOGIN_REDIRECT_STATUS_CODE;
                 responseStringArray[1] = "Login Redirect Triggered.";
@@ -286,10 +286,10 @@ public class LayoutCrawler {
             
             if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
                 responseStringArray[0] = "" + statusLine.getStatusCode();
-                responseStringArray[1] = "Link appears to be valid." + statusLine.getReasonPhrase();
+                responseStringArray[1] = statusLine.getReasonPhrase(); 
             } else {
                 responseStringArray[0] = "" + statusLine.getStatusCode();
-                responseStringArray[1] = "" + statusLine.getReasonPhrase();	
+                responseStringArray[1] = statusLine.getReasonPhrase();
             }
 
             return responseStringArray;

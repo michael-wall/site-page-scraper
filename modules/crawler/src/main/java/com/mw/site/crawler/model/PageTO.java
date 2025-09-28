@@ -6,6 +6,8 @@ import java.util.List;
 public class PageTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
+	private long layoutId;
+	private long plid;
 	private String name;
 	private String friendlyUrl;
 	private String url;
@@ -20,6 +22,22 @@ public class PageTO implements Serializable {
 	private int guestRoleViewPermissionEnabled = -1;
 	
 	private List<LinkTO> links;
+
+	public long getLayoutId() {
+		return layoutId;
+	}
+
+	public void setLayoutId(long layoutId) {
+		this.layoutId = layoutId;
+	}
+
+	public long getPlid() {
+		return plid;
+	}
+
+	public void setPlid(long plid) {
+		this.plid = plid;
+	}
 
 	public String getName() {
 		return name;
