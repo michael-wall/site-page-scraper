@@ -33,6 +33,7 @@ public class ExcelXLSXFileOutput {
         	
         	XSSFCellStyle headingCellStyle = getHeadingCellStyle(workbook, headingFont);        	
         	XSSFCellStyle subHeadingCellStyle = getSubHeadingCellStyle(workbook, headingFont);
+        	XSSFCellStyle firstLinkRowCellStyle = getFirstLinkRowCellStyle(workbook, headingFont);
         	
 			long totalLinkCount = 0;
 			long totalValidLinkCount = 0;
@@ -207,15 +208,18 @@ public class ExcelXLSXFileOutput {
             linksSheetHeaderRow.createCell(1).setCellValue("Source Page Friendly URL");
             linksSheetHeaderRow.getCell(1).setCellStyle(headingCellStyle);
             
-            linksSheetHeaderRow.createCell(2).setCellValue("Link Label");
+            linksSheetHeaderRow.createCell(2).setCellValue("Page Link Number");
             linksSheetHeaderRow.getCell(2).setCellStyle(headingCellStyle);
             
-            linksSheetHeaderRow.createCell(3).setCellValue("Link URL");
+            linksSheetHeaderRow.createCell(3).setCellValue("Link Label");
             linksSheetHeaderRow.getCell(3).setCellStyle(headingCellStyle);
             
+            linksSheetHeaderRow.createCell(4).setCellValue("Link URL");
+            linksSheetHeaderRow.getCell(4).setCellStyle(headingCellStyle);
+            
             if (config.isValidateLinksOnPages()) {
-            	linksSheetHeaderRow.createCell(4).setCellValue("Link Status");
-            	linksSheetHeaderRow.getCell(4).setCellStyle(headingCellStyle);
+            	linksSheetHeaderRow.createCell(5).setCellValue("Link Status");
+            	linksSheetHeaderRow.getCell(5).setCellStyle(headingCellStyle);
 	        }
             
             int linksRowCount = 1;
@@ -233,16 +237,26 @@ public class ExcelXLSXFileOutput {
                     	
                     	if (pageLinkCount == 1) { // Only populate for the first link of each page...
                         	linksRow.createCell(0).setCellValue(pageTO.getName());
-                        	linksRow.createCell(1).setCellValue(pageTO.getFriendlyUrl());                    		
+                        	linksRow.getCell(0).setCellStyle(firstLinkRowCellStyle);
+                        	
+                        	linksRow.createCell(1).setCellValue(pageTO.getFriendlyUrl());
+                        	linksRow.getCell(1).setCellStyle(firstLinkRowCellStyle);
                     	}
-
-                    	linksRow.createCell(2).setCellValue(linkTO.getLabel());
-                    	linksRow.createCell(3).setCellValue(linkTO.getHref());
+                    	
+                    	linksRow.createCell(2).setCellValue(pageLinkCount);
+                    	if (pageLinkCount == 1) linksRow.getCell(2).setCellStyle(firstLinkRowCellStyle);
+                    	
+                    	linksRow.createCell(3).setCellValue(linkTO.getLabel());
+                    	if (pageLinkCount == 1) linksRow.getCell(3).setCellStyle(firstLinkRowCellStyle);
+                    	
+                    	linksRow.createCell(4).setCellValue(linkTO.getHref());
+                    	if (pageLinkCount == 1) linksRow.getCell(4).setCellStyle(firstLinkRowCellStyle);
                     	
                     	if (config.isValidateLinksOnPages()) {
-                    		linksRow.createCell(4).setCellValue(linkTO.getOutput());
+                    		linksRow.createCell(5).setCellValue(linkTO.getOutput());
+                    		if (pageLinkCount == 1) linksRow.getCell(5).setCellStyle(firstLinkRowCellStyle);
                     	}
-
+                    	
                     	linksRowCount ++;
                     	pageLinkCount ++;
                 	}            		
@@ -261,6 +275,7 @@ public class ExcelXLSXFileOutput {
 			
     		summaryPageSubHeadingRow.createCell(0).setCellValue("Page Summary");
     		summaryPageSubHeadingRow.getCell(0).setCellStyle(subHeadingCellStyle);
+    		summaryPageSubHeadingRow.createCell(1).setCellStyle(subHeadingCellStyle); //Empty cell
     		
     		summaryRowCount ++;
     		
@@ -276,6 +291,7 @@ public class ExcelXLSXFileOutput {
     			
     		summaryLinkSubHeadingRow.createCell(0).setCellValue("Link Summary");
     		summaryLinkSubHeadingRow.getCell(0).setCellStyle(subHeadingCellStyle);
+    		summaryLinkSubHeadingRow.createCell(1).setCellStyle(subHeadingCellStyle); //Empty cell
     			
     		summaryRowCount ++;
     			
@@ -293,13 +309,13 @@ public class ExcelXLSXFileOutput {
    				summaryRowCount ++;
    			}            	
 	         
-            for (int i = 0; i <= 2; i++) {
+            for (int i = 0; i <= 1; i++) {
             	summarySheet.autoSizeColumn(i);
             }
             for (int i = 0; i <= pageHeaderColumnIndex; i++) {
             	pagesSheet.autoSizeColumn(i);
             }
-            for (int i = 0; i <= 4; i++) {
+            for (int i = 0; i <= 5; i++) {
             	pageLinksSheet.autoSizeColumn(i);
             }            
 
@@ -337,6 +353,17 @@ public class ExcelXLSXFileOutput {
 		XSSFCellStyle cellStyle = workbook.createCellStyle();
 
 		cellStyle.setWrapText(true);
+		cellStyle.setFont(headingFont);
+		
+		cellStyle.setFillForegroundColor(IndexedColors.LIME.getIndex());
+		cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		
+		return cellStyle;
+	}	
+	
+	private XSSFCellStyle getFirstLinkRowCellStyle(XSSFWorkbook workbook, XSSFFont headingFont) {
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+
 		cellStyle.setFont(headingFont);
 		
 		return cellStyle;
